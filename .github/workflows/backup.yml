@@ -1,0 +1,37 @@
+name: Nightly backup
+# Every night: save an encrypted copy of all league data as a downloadable file (kept 90 days).
+# The copy is encrypted with BACKUP_PASSPHRASE because anyone with a GitHub login can download files from a public repository.
+on:
+  schedule:
+    - cron: "17 7 * * *"          # 3:17 a.m. Eastern during daylight time, 2:17 a.m. in winter
+  workflow_dispatch: {}
+concurrency:
+  group: backup
+  cancel-in-progress: false
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the newest Postgres client (a dump needs a client at least as new as the database)
+        run: |
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-17
+      - name: Dump, encrypt and check
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then echo "SUPABASE_DB_URL secret is not set"; exit 1; fi
+          if [ -z "$BACKUP_PASSPHRASE" ]; then echo "BACKUP_PASSPHRASE secret is not set"; exit 1; fi
+          export PATH=/usr/lib/postgresql/17/bin:$PATH
+          mkdir -p out
+          python3 tools/backup.py dump "out/league-$(date -u +%Y-%m-%d).sql.gz.gpg"
+          python3 tools/backup.py verify "out/league-$(date -u +%Y-%m-%d).sql.gz.gpg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: league-backup
+          path: out/
+          retention-days: 90
+          if-no-files-found: error

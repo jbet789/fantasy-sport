@@ -1,0 +1,37 @@
+name: Load players
+# Builds the player pool and the draft ranking from last season's numbers, for every sport at once so the ranking is fair across sports.
+# First run it with "write" OFF: the Summary shows the top players and the counts so you can sanity-check. Then run it again with "write" ON.
+# NBA and MLS come from files in the data/ folder (pool_nba.csv, pool_mls.csv); if one is missing the run says so and writes nothing.
+on:
+  workflow_dispatch:
+    inputs:
+      write:
+        description: "Write the players to the database (leave off to preview)"
+        type: boolean
+        default: false
+      force:
+        description: "Write even if one sport could not be loaded (not recommended)"
+        type: boolean
+        default: false
+concurrency:
+  group: pool
+  cancel-in-progress: false
+jobs:
+  pool:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the pool
+        run: |
+          if [ -z "$DATABASE_URL" ]; then echo "SUPABASE_DB_URL secret is not set"; exit 1; fi
+          args="--sport all"
+          if [ "${{ github.event.inputs.write }}" = "true" ]; then args="$args --apply"; fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then args="$args --force"; fi
+          set +e
+          python3 tools/ingest.py pool $args | tee pool.txt
+          code=${PIPESTATUS[0]}
+          { echo '### Player pool'; echo '```'; cat pool.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $code

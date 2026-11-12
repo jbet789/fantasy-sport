@@ -1,0 +1,22 @@
+name: Launch check
+# Run by hand (Actions > Launch check > Run workflow), as often as you like. It only reads: it never changes anything.
+# The "Summary" of the run lists what is ready, what to look at, and what must be fixed before launch.
+on:
+  workflow_dispatch: {}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the league
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then echo "SUPABASE_DB_URL secret is not set"; echo "### Launch check\nSUPABASE_DB_URL secret is not set" >> "$GITHUB_STEP_SUMMARY"; exit 1; fi
+          set +e
+          python3 tools/preflight.py | tee preflight.txt
+          code=${PIPESTATUS[0]}
+          { echo '### Launch check'; echo '```'; cat preflight.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $code

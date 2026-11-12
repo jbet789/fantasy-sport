@@ -1,0 +1,535 @@
+<title>Waivers and Trades</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+:root {
+  --bg: #edf0f3; --surface: #ffffff; --surface-2: #f5f7f9; --ink: #14202a; --muted: #566676; --line: #d3dae1;
+  --accent: #0a6a73; --accent-ink: #ffffff; --accent-soft: #d6edef; --bad: #b3261e; --bad-soft: #f8dedb; --good: #1d7a43; --good-soft: #dcf0e3; --warn: #a85f00; --warn-soft: #f9e8cf;
+  --nfl: #8a4a2e; --nba: #c25f16; --mlb: #2a5db0; --nhl: #1f86a1; --mls: #36853a; --f1: #ad2b5a;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1920; --surface: #15232d; --surface-2: #1a2b37; --ink: #e5ecf1; --muted: #97a9b7; --line: #2a3d4a;
+    --accent: #5ccdd6; --accent-ink: #052529; --accent-soft: #143439; --bad: #ff8a80; --bad-soft: #3b1f1d; --good: #7bd89c; --good-soft: #183425; --warn: #f2b45e; --warn-soft: #3a2c14;
+    --nfl: #d18b6b; --nba: #f1975a; --mlb: #7ea8ee; --nhl: #6cc3da; --mls: #7fcb82; --f1: #ee7ca4;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1920; --surface: #15232d; --surface-2: #1a2b37; --ink: #e5ecf1; --muted: #97a9b7; --line: #2a3d4a;
+  --accent: #5ccdd6; --accent-ink: #052529; --accent-soft: #143439; --bad: #ff8a80; --bad-soft: #3b1f1d; --good: #7bd89c; --good-soft: #183425; --warn: #f2b45e; --warn-soft: #3a2c14;
+  --nfl: #d18b6b; --nba: #f1975a; --mlb: #7ea8ee; --nhl: #6cc3da; --mls: #7fcb82; --f1: #ee7ca4;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 16px; }
+.eyebrow { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; }
+.top h1 { font-size: 28px; letter-spacing: -0.01em; }
+.badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; font-size: 11.5px; color: var(--muted); background: var(--surface); }
+.bar { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+.field { display: grid; gap: 2px; font-size: 12px; color: var(--muted); min-width: 0; }
+.field select, .field input[type=search], .field input[type=text] { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); max-width: 100%; min-width: 0; }
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 0; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tab { border: 1px solid transparent; background: none; padding: 7px 14px; border-radius: 8px; font-weight: 500; color: var(--muted); }
+.tab[aria-selected="true"] { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.panel > header { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.panel > header h2 { font-size: 16px; }
+.panel .body { padding: 12px 16px 16px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.side { display: grid; gap: 16px; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+ol.list, ul.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.row.sel { border-color: var(--accent); background: var(--accent-soft); }
+.row .who { min-width: 0; display: grid; gap: 1px; }
+.row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.row .meta { color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.row .acts { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+label.row { grid-template-columns: auto minmax(0, 1fr); cursor: pointer; }
+label.row.off { opacity: 0.55; cursor: not-allowed; }
+.tag { display: inline-block; min-width: 36px; text-align: center; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--c); border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 12%, var(--surface)); }
+.s-NFL { --c: var(--nfl); } .s-NBA { --c: var(--nba); } .s-MLB { --c: var(--mlb); }
+.s-NHL { --c: var(--nhl); } .s-MLS { --c: var(--mls); } .s-F1 { --c: var(--f1); }
+.chip { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.chip.good { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.chip.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.chip.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.chip.acc { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 5px 10px; font-weight: 500; font-size: 13px; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.danger { color: var(--bad); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.note { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+.msg { min-height: 20px; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.msg.err { color: var(--bad); }
+.compose { padding: 10px 12px; border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 8px; margin-bottom: 12px; display: grid; gap: 8px; }
+.stat { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.stat:last-child { border-bottom: 0; }
+.stat b { font-variant-numeric: tabular-nums; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th, .tbl td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.scroll { overflow-x: auto; }
+.trade { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface-2); display: grid; gap: 8px; }
+.trade .legs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.trade .leg b { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+.trade .p { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 620px) { .two, .trade .legs { grid-template-columns: minmax(0, 1fr); } .top h1 { font-size: 24px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow" id="clockLine"></div>
+      <h1>Waivers and trades</h1>
+    </div>
+    <span class="badge">Prototype: sample players, nothing is saved</span>
+  </div>
+
+  <section class="bar" aria-label="Demo controls">
+    <label class="field" for="preset">Pretend it is
+      <select id="preset">
+        <option value="sat">Saturday 2:00 p.m. (week 12)</option>
+        <option value="mon">Monday 8:00 p.m. (day before the run)</option>
+        <option value="tue">Tuesday 8:59 a.m. (1 minute before the run)</option>
+        <option value="tue1000">Tuesday 10:00 a.m. (run done, lineups open)</option>
+        <option value="tuelock">Tuesday 12:01 p.m. (lineups locked)</option>
+        <option value="late">Tuesday Nov 9, 2027 12:01 p.m. (after the trade deadline)</option>
+      </select>
+    </label>
+    <button class="btn" id="advance" type="button">Advance 24 hours</button>
+    <label class="check" for="comm"><input type="checkbox" id="comm"> Show commissioner controls</label>
+    <span class="chip" id="lockChip" style="align-self:center"></span>
+    <div class="tabs" role="tablist" aria-label="Screens" style="margin-left:auto">
+      <button class="tab" role="tab" id="tab-fa" aria-selected="true" type="button" data-tab="fa">Free agents</button>
+      <button class="tab" role="tab" id="tab-claims" aria-selected="false" type="button" data-tab="claims">My claims</button>
+      <button class="tab" role="tab" id="tab-trades" aria-selected="false" type="button" data-tab="trades">Trades</button>
+      <button class="tab" role="tab" id="tab-log" aria-selected="false" type="button" data-tab="log">Activity</button>
+    </div>
+  </section>
+
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  <div id="view"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var SPORTS = ["NFL", "NBA", "MLB", "NHL", "MLS", "F1"];
+  var POS = { NFL: ["QB", "RB", "WR", "TE"], NBA: ["Guard", "Wing", "Big"], MLB: ["SP", "RP", "Hitter"], NHL: ["Skater", "Goalie"], MLS: ["Forward", "Midfielder", "Defender", "Goalkeeper"], F1: ["Driver"] };
+  var FIRST = "Aaron Abel Adrian Alec Amir Andre Anton Arlo Beau Bennett Caleb Callum Cass Dario Dante Dmitri Eli Emeka Felix Finn Gabe Hakim Hugo Idris Ivan Jalen Jonas Kai Kellan Kofi Lars Leo Luca Malik Marco Mateo Nico Noor Omar Orin Pablo Quinn Rafa Reid Rory Sami Soren Tariq Teo Tobias Uri Viktor Wes Xavier Yusuf Zane Zeke".split(" ");
+  var LAST = "Abara Alder Ashby Bexley Brandt Calloway Cardona Castellan Dunmore Ellery Farrow Fenwick Garrity Halloran Hargrove Ibarra Jessup Kessler Lindqvist Marlowe Nwosu Okafor Pellegrin Quillan Rasmus Salazar Thorne Ulloa Varga Whitlock Yeager Zeller Aldous Branko Corvin Dacosta Esposito Falk Gallo Hendry Iverson Jarrah Koval Lowry Maddox Navarro Oyelaran Prescott Quade Renfro Stroud Tamsin Underhill Vance Wexler".split(" ");
+  var ME = 4, TEAMS = 12, ACTIVE_LIMIT = 20, IR_LIMIT = 4, F1_CAP = 2;
+  var H = 3600e3, DAY = 24 * H, MIN = 60e3;
+  var WAIVER_DROPPED = DAY, WAIVER_NEW = 2 * DAY, READD_BLOCK = 7 * DAY, VETO_WINDOW = 24 * H;
+  var U = function (y, m, d, h, mi) { return Date.UTC(y, m - 1, d, h || 0, mi || 0); };
+  var DEADLINE = U(2027, 11, 9, 12, 0);               // end of week 44: Tuesday noon
+  var BASE = U(2027, 3, 27, 14, 0);                   // Saturday of week 12
+  var PRESETS = { sat: BASE, mon: U(2027, 3, 29, 20, 0), tue: U(2027, 3, 30, 8, 59), tue1000: U(2027, 3, 30, 10, 0), tuelock: U(2027, 3, 30, 12, 1), late: U(2027, 11, 9, 12, 1) };
+
+  function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  var DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], MONS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function fmt(ms) {
+    var d = new Date(ms), h = d.getUTCHours(), m = d.getUTCMinutes(), ap = h >= 12 ? "p.m." : "a.m.";
+    return DAYS[d.getUTCDay()] + " " + MONS[d.getUTCMonth()] + " " + d.getUTCDate() + ", " + ((h + 11) % 12 + 1) + ":" + (m < 10 ? "0" : "") + m + " " + ap;
+  }
+  function nextNine(ms) { var d = new Date(ms); var n = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 9, 0); return n > ms ? n : n + DAY; }
+  function isSlot(ms) { var d = new Date(ms); return d.getUTCDay() === 2 && d.getUTCHours() === 9 && d.getUTCMinutes() === 0; }
+  function nextRun(ms) { var t = nextNine(ms - 1 + 1); while (!isSlot(t)) t += DAY; return t; }   // first Tuesday 9:00 strictly after ms
+
+  // ---------- state ----------
+  var S;
+  var ui = { tab: "fa", sport: "all", q: "", onlyNow: false, compose: null, msg: "", err: false, results: null, tradeDraft: null };
+  var $ = function (id) { return document.getElementById(id); };
+  function say(t, err) { ui.msg = t || ""; ui.err = !!err; var m = $("msg"); m.textContent = ui.msg; m.className = "msg" + (err ? " err" : ""); }
+
+  function build(now) {
+    var s = { now: now, players: {}, owner: {}, active: [], ir: [], waivers: {}, blocked: {}, claims: [], trades: [], log: [], nextId: 1, tradeId: 1, locked: false };
+    var r = rng(4242), used = {};
+    function mk(sport, extra) {
+      var name; do { name = FIRST[Math.floor(r() * FIRST.length)] + " " + LAST[Math.floor(r() * LAST.length)]; } while (used[name]); used[name] = 1;
+      var p = { id: s.nextId++, name: name, sport: sport, pos: POS[sport][Math.floor(r() * POS[sport].length)], last: Math.round((r() * 34 - 6) * 10) / 10 };
+      s.players[p.id] = p; return p;
+    }
+    var mix = ["NFL", "NBA", "MLB", "NHL", "MLS", "NFL", "NBA", "MLB", "NHL", "MLB", "NBA", "NFL", "NHL", "MLB", "NBA", "NFL", "MLS", "NHL", "MLB", "NBA"];
+    for (var t = 0; t < TEAMS; t++) {
+      var a = [], f1 = 0;
+      var n = t === ME ? 19 : 20;
+      for (var i = 0; i < n; i++) {
+        var sp = mix[(i + t * 3) % mix.length];
+        if (t === ME && i >= 17) sp = "F1";                      // my two F1 drivers: the cap will matter
+        else if (t !== ME && i === 15 && t % 3 === 0) sp = "F1";
+        var p = mk(sp); a.push(p.id); s.owner[p.id] = t;
+      }
+      s.active.push(a); s.ir.push([]);
+      for (var k = 0; k < 2; k++) { var q = mk(mix[(k + t) % mix.length]); q.inj = "Out"; s.ir[t].push(q.id); s.owner[q.id] = t; }
+    }
+    // free-agent pool
+    var pool = [];
+    for (var j = 0; j < 62; j++) pool.push(mk(j < 5 ? "F1" : SPORTS[j % 5]));
+    pool.forEach(function (p) { s.owner[p.id] = null; });
+    // five call-ups and five recent drops sit on waivers
+    var base = BASE;
+    pool.slice(5, 10).forEach(function (p) { s.waivers[p.id] = nextNine(U(2027, 3, 27, 10, 0) + WAIVER_NEW); });                 // new arrivals: Tuesday run
+    pool.slice(10, 13).forEach(function (p) { s.waivers[p.id] = nextNine(U(2027, 3, 26, 10, 0) + WAIVER_DROPPED); });              // dropped Friday: free agent Sunday 9:00
+    pool.slice(13, 15).forEach(function (p) { s.waivers[p.id] = nextNine(U(2027, 3, 26, 20, 0) + WAIVER_NEW); });                 // arrivals: Monday 9:00? (min ends Sun 8 p.m.)
+    // two players I dropped on Wednesday: free agents now, but blocked for me for 7 days
+    pool.slice(15, 17).forEach(function (p) { s.blocked[ME + ":" + p.id] = U(2027, 3, 24, 10, 0) + READD_BLOCK; });
+    s.log.push({ when: U(2027, 3, 24, 10, 0), text: "Team 5 (you) dropped " + s.players[pool[15].id].name + " and " + s.players[pool[16].id].name + "." });
+    s.priority = [7, 2, 9, ME, 0, 11, 5, 1, 10, 3, 8, 6];        // worst record first, resets every week
+    s.otherPlayers = pool.map(function (p) { return p.id; });
+    // seeded trades: one offered to me, one already in its 24-hour review
+    var t2 = 1, mine = s.active[ME];
+    s.trades.push(mkTrade(s, 1, t2, ME, [s.active[t2][12]], [mine[11]], U(2027, 3, 26, 18, 0)));
+    var tr = mkTrade(s, 6, 9, 9 === 6 ? 0 : 6, [s.active[6][14]], [s.active[9][13]], U(2027, 3, 26, 9, 0));
+    tr.proposer = 6; tr.partner = 9; tr.status = "pending_veto"; tr.accepted_at = U(2027, 3, 27, 9, 0); tr.veto_until = tr.accepted_at + VETO_WINDOW;
+    s.trades.push(tr);
+    return s;
+  }
+  function mkTrade(s, id, proposer, partner, give, get, at) {
+    return { id: s.tradeId++, proposer: proposer, partner: partner, give: give, get: get, drops: {}, status: "proposed", at: at, note: "" };
+  }
+  function tn(t) { return t === ME ? "Team 5 (you)" : "Team " + (t + 1); }
+  function pl(id) { return S.players[id]; }
+  function tag(s) { return '<span class="tag s-' + s + '">' + s + "</span>"; }
+  function inj(p) { return p.inj ? '<span class="chip bad">' + p.inj + "</span>" : ""; }
+  function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function starters(t) { return S.active[t].slice(0, 10); }
+  function lineupLocked() { var d = new Date(S.now), h = d.getUTCHours(); return !(d.getUTCDay() === 2 && h >= 3 && h < 12); }   // open Tuesday 3:00 a.m. to noon
+  function lockedSet(t) { return lineupLocked() ? starters(t) : []; }
+  function isLocked(t, id) { return lockedSet(t).indexOf(id) >= 0; }
+  function f1count(ids) { return ids.filter(function (id) { return pl(id).sport === "F1"; }).length; }
+  function roster(t) { return S.active[t].concat(S.ir[t]); }
+  function without(arr, x) { return arr.filter(function (y) { return y !== x; }); }
+
+  // ---------- rules (mirrors engine/transactions.py) ----------
+  function isFA(id, now) {
+    if (S.owner[id] !== null && S.owner[id] !== undefined) return false;
+    var rel = S.waivers[id];
+    return rel === undefined || (rel <= now && !isSlot(rel));
+  }
+  function addProblem(team, id, drop, now) {
+    var b = S.blocked[team + ":" + id];
+    if (b && b > now) return tn(team) + " dropped " + pl(id).name + " within the last 7 days (blocked until " + fmt(b) + ")";
+    var active = S.active[team].slice(), ir = S.ir[team].slice();
+    if (drop != null) {
+      if (active.indexOf(drop) < 0 && ir.indexOf(drop) < 0) return pl(drop).name + " is not on the roster";
+      if (isLocked(team, drop)) return pl(drop).name + " is in the locked lineup and can't be dropped until the next lock";
+      active = without(active, drop); ir = without(ir, drop);
+    }
+    if (active.length >= ACTIVE_LIMIT) return "Roster is full: name an active player to drop";
+    if (pl(id).sport === "F1" && f1count(active.concat(ir)) >= F1_CAP) return "Adding " + pl(id).name + " would put the team over the F1 cap of " + F1_CAP + ": drop an F1 driver";
+    return null;
+  }
+  function dropPlayer(team, id, at, how) {
+    S.active[team] = without(S.active[team], id); S.ir[team] = without(S.ir[team], id);
+    S.owner[id] = null; S.waivers[id] = nextNine(at + WAIVER_DROPPED); S.blocked[team + ":" + id] = at + READD_BLOCK;
+    S.log.unshift({ when: at, text: tn(team) + " dropped " + pl(id).name + (how ? " (" + how + ")" : "") + ". On waivers until " + fmt(S.waivers[id]) + "." });
+  }
+  function addToBench(team, id, at, how) {
+    S.active[team].push(id); S.owner[id] = team; delete S.waivers[id];
+    S.log.unshift({ when: at, text: tn(team) + " added " + pl(id).name + " (" + how + ")." });
+  }
+  function runWaivers(runTime, claims) {
+    var eligible = {};
+    Object.keys(S.waivers).forEach(function (id) { var rel = S.waivers[id]; if (isSlot(rel) && rel <= runTime) eligible[id] = 1; });
+    var queue = S.priority.slice(), pending = {}, taken = {}, results = [];
+    Object.keys(claims).forEach(function (t) { pending[t] = claims[t].slice(); });
+    function problem(team, c) {
+      var p = c.player;
+      if (taken[p] !== undefined) return ["lost", "Awarded to " + tn(taken[p]) + ", who had priority"];
+      if (!eligible[p]) {
+        if (S.owner[p] !== null && S.owner[p] !== undefined) return ["void", "Already on a roster"];
+        if (S.waivers[p] && S.waivers[p] > runTime) return ["void", "Not claimable at this run: released " + fmt(S.waivers[p])];
+        return ["void", "Already a free agent: add him directly"];
+      }
+      var m = addProblem(+team, p, c.drop, runTime);
+      return m ? ["void", m] : null;
+    }
+    for (;;) {
+      var progressed = false;
+      for (var qi = 0; qi < queue.length; qi++) {
+        var team = queue[qi], list = pending[team] || [], won = null;
+        for (var ci = 0; ci < list.length; ci++) if (!problem(team, list[ci])) { won = list[ci]; break; }
+        if (won) {
+          if (won.drop != null) dropPlayer(team, won.drop, runTime, "to make room for a claim");
+          addToBench(team, won.player, runTime, "waiver claim");
+          taken[won.player] = team;
+          pending[team] = list.filter(function (c) { return c !== won; });
+          queue.splice(qi, 1); queue.push(team);
+          results.push({ team: +team, player: won.player, drop: won.drop, status: "won", reason: "" });
+          progressed = true; break;
+        }
+      }
+      if (!progressed) break;
+    }
+    Object.keys(pending).forEach(function (t) {
+      pending[t].forEach(function (c) { var pr = problem(t, c) || ["lost", "Not awarded"]; results.push({ team: +t, player: c.player, drop: c.drop, status: pr[0], reason: pr[1] }); });
+    });
+    Object.keys(S.waivers).forEach(function (id) { if (S.waivers[id] <= runTime) delete S.waivers[id]; });
+    return results;
+  }
+  function otherClaims(runTime, mineClaims) {
+    var r = rng(runTime / 60000 | 0), claims = {};
+    var el = Object.keys(S.waivers).filter(function (id) { return isSlot(S.waivers[id]) && S.waivers[id] <= runTime; });
+    for (var t = 0; t < TEAMS; t++) {
+      if (t === ME) { if (mineClaims.length) claims[t] = mineClaims; continue; }
+      var list = [];
+      el.forEach(function (id) { if (r() < 0.35) { var drop = S.active[t].length >= ACTIVE_LIMIT ? S.active[t][10 + Math.floor(r() * 10)] : null; list.push({ player: +id, drop: drop }); } });
+      if (list.length) claims[t] = list;
+    }
+    return claims;
+  }
+  function execRun(runTime, mineClaims) {
+    S.now = runTime;
+    var res = runWaivers(runTime, otherClaims(runTime, mineClaims));
+    S.log.unshift({ when: runTime, text: "Tuesday 9:00 a.m. waiver run: " + res.filter(function (x) { return x.status === "won"; }).length + " claims awarded, " + res.filter(function (x) { return x.status !== "won"; }).length + " not awarded." });
+    var pr = S.priority.slice(); var winners = [];
+    res.forEach(function (x) { if (x.status === "won") winners.push(x.team); });
+    S.priority = [7, 2, 9, ME, 0, 11, 5, 1, 10, 3, 8, 6];       // priority resets every week (reverse standings)
+    return res;
+  }
+  function tradeProblem(t, checkDeadline, now) {
+    if (checkDeadline && now >= DEADLINE) return "Trades closed at the end of week 44";
+    if (t.proposer === t.partner) return "A team can't trade with itself";
+    if (!t.give.length || !t.get.length) return "Both sides must send at least one player";
+    var sides = [[t.proposer, t.give, t.get], [t.partner, t.get, t.give]];
+    for (var i = 0; i < 2; i++) {
+      var team = sides[i][0], out = sides[i][1];
+      for (var j = 0; j < out.length; j++) {
+        if (roster(team).indexOf(out[j]) < 0) return pl(out[j]).name + " is not on " + tn(team) + "'s roster";
+        if (isLocked(team, out[j])) return pl(out[j]).name + " is in " + tn(team) + "'s locked lineup and can't be traded until the next lock";
+      }
+      var dr = t.drops[team] || [];
+      for (var k = 0; k < dr.length; k++) {
+        if (out.indexOf(dr[k]) >= 0 || roster(team).indexOf(dr[k]) < 0) return pl(dr[k]).name + " can't be used as a drop for " + tn(team);
+        if (isLocked(team, dr[k])) return pl(dr[k]).name + " is in the locked lineup and can't be dropped";
+      }
+    }
+    for (var n = 0; n < 2; n++) {
+      var tm = sides[n][0], o = sides[n][1], inc = sides[n][2], gone = o.concat(t.drops[tm] || []);
+      var act = S.active[tm].filter(function (x) { return gone.indexOf(x) < 0; }).concat(inc);
+      var irr = S.ir[tm].filter(function (x) { return gone.indexOf(x) < 0; });
+      if (act.length > ACTIVE_LIMIT) return tn(tm) + " would have " + act.length + " active players: name drops to get to " + ACTIVE_LIMIT;
+      if (f1count(act.concat(irr)) > F1_CAP) return tn(tm) + " would be over the F1 cap of " + F1_CAP;
+    }
+    return null;
+  }
+  function execTrade(t, at) {
+    var sets = [[t.proposer, t.give, t.get], [t.partner, t.get, t.give]];
+    sets.forEach(function (x) {
+      (t.drops[x[0]] || []).forEach(function (d) { dropPlayer(x[0], d, at, "to make room in a trade"); });
+      x[1].forEach(function (id) { S.active[x[0]] = without(S.active[x[0]], id); S.ir[x[0]] = without(S.ir[x[0]], id); });
+    });
+    sets.forEach(function (x) { x[2].forEach(function (id) { S.active[x[0]].push(id); S.owner[id] = x[0]; }); });
+    t.status = "completed";
+    S.log.unshift({ when: at, text: "Trade completed: " + tn(t.proposer) + " sends " + names(t.give) + "; " + tn(t.partner) + " sends " + names(t.get) + ". Acquired players start on the bench." });
+  }
+  function names(ids) { return ids.map(function (i) { return pl(i).name; }).join(", "); }
+  function settle() {
+    S.trades.forEach(function (t) {
+      if (t.status === "proposed" && S.now >= DEADLINE) t.status = "expired";
+      else if (t.status === "pending_veto" && S.now >= t.veto_until) {
+        var pr = tradeProblem(t, false, S.now);
+        if (pr) { t.status = "failed"; t.note = pr; S.log.unshift({ when: S.now, text: "Trade " + t.id + " could not complete: " + pr }); }
+        else execTrade(t, S.now);
+      }
+    });
+  }
+  function advanceTo(target) {
+    // run every Tuesday 9:00 a.m. waiver run we pass
+    var t = nextRun(S.now);
+    while (t <= target) { var mine = (t === nextRun(S.now) ? S.claims.slice() : []); var res = execRun(t, mine); ui.results = res; S.claims = []; t = nextRun(t); }
+    S.now = target; settle();
+  }
+
+  // ---------- views ----------
+  function myClaimIds() { return S.claims.map(function (c) { return c.player; }); }
+  function statusOf(id) {
+    var rel = S.waivers[id], b = S.blocked[ME + ":" + id];
+    if (S.owner[id] !== null && S.owner[id] !== undefined) return { kind: "owned" };
+    if (b && b > S.now) return { kind: "blocked", text: "Blocked for you until " + fmt(b), chip: "bad", label: "Blocked" };
+    if (isFA(id, S.now)) return { kind: "fa", text: "Free agent: first come, first served", chip: "good", label: "Free agent" };
+    if (rel <= S.now) return { kind: "held", text: "Released at the Tuesday run; claims are being processed", chip: "warn", label: "Held" };
+    if (isSlot(rel)) return { kind: "claim", rel: rel, text: "Claims run " + fmt(rel) + " (priority order)", chip: "acc", label: "Waivers" };
+    return { kind: "soon", rel: rel, text: "Becomes a free agent " + fmt(rel), chip: "warn", label: "Waivers" };
+  }
+  function viewFA() {
+    var ids = Object.keys(S.players).map(Number).filter(function (id) { return S.owner[id] === null; });
+    ids = ids.filter(function (id) {
+      var p = pl(id);
+      if (ui.sport !== "all" && p.sport !== ui.sport) return false;
+      if (ui.q && p.name.toLowerCase().indexOf(ui.q.toLowerCase()) < 0) return false;
+      if (ui.onlyNow) { var st = statusOf(id); if (st.kind !== "fa") return false; }
+      return true;
+    }).sort(function (a, b) { return pl(b).last - pl(a).last; });
+    var rows = ids.map(function (id) {
+      var p = pl(id), st = statusOf(id), btn = "";
+      var claimed = myClaimIds().indexOf(id) >= 0;
+      if (st.kind === "fa") btn = '<button class="btn primary" data-act="start" data-mode="add" data-id="' + id + '">Add</button>';
+      else if (st.kind === "claim") btn = claimed ? '<span class="chip good">Claim placed</span>' : '<button class="btn" data-act="start" data-mode="claim" data-id="' + id + '">Claim</button>';
+      else btn = '<button class="btn" disabled title="' + esc(st.text) + '">' + (st.kind === "blocked" ? "Blocked" : st.kind === "held" ? "Held" : "Not yet") + "</button>";
+      return '<li class="row' + (ui.compose && ui.compose.id === id ? " sel" : "") + '"><span class="who"><span class="nm">' + esc(p.name) + '</span><span class="meta">' + tag(p.sport) + "<span>" + p.pos + "</span><span>Last week " + p.last + '</span><span class="chip ' + st.chip + '">' + st.label + "</span></span><span class=\"meta\">" + st.text + '</span></span><span class="acts">' + btn + "</span></li>";
+    }).join("") || '<li class="note">No players match.</li>';
+    var compose = "";
+    if (ui.compose) {
+      var c = ui.compose, p = pl(c.id), needDrop = addProblem(ME, c.id, null, S.now);
+      var opts = roster(ME).filter(function (x) { return !isLocked(ME, x); }).map(function (x) { var q = pl(x); return '<option value="' + x + '">' + esc(q.name) + " (" + q.sport + " " + q.pos + (S.ir[ME].indexOf(x) >= 0 ? ", IR" : "") + ")</option>"; }).join("");
+      var need = needDrop && !/blocked/i.test(needDrop);
+      compose = '<div class="compose"><div><b>' + (c.mode === "add" ? "Add " : "Place a claim for ") + esc(p.name) + "</b> " + tag(p.sport) + ' <span class="note" style="margin:0">Arrives on your bench.</span></div>' +
+        (needDrop ? '<div class="note" style="margin:0">' + esc(needDrop) + "</div>" : "") +
+        '<label class="field">Drop' + (need ? " (required)" : " (optional)") + '<select id="dropSel"><option value="">' + (need ? "Choose a player to drop" : "No drop") + "</option>" + opts + "</select></label>" +
+        '<div class="acts"><button class="btn primary" data-act="confirm">' + (c.mode === "add" ? "Confirm add" : "Place claim") + '</button> <button class="btn" data-act="cancel">Cancel</button></div></div>';
+    }
+    var me = S.active[ME], runAt = nextRun(S.now);
+    return '<div class="layout"><section class="panel"><header><h2>Players</h2><span class="eyebrow">' + ids.length + " shown</span></header><div class=\"body\">" +
+      '<div class="bar" style="border:0;padding:0 0 12px"><label class="field" for="sportSel">Sport<select id="sportSel"><option value="all">All sports</option>' + SPORTS.map(function (s) { return '<option value="' + s + '"' + (ui.sport === s ? " selected" : "") + ">" + s + "</option>"; }).join("") + '</select></label>' +
+      '<label class="field" for="qIn">Search<input type="search" id="qIn" value="' + esc(ui.q) + '" placeholder="Name"></label>' +
+      '<label class="check" for="nowOnly"><input type="checkbox" id="nowOnly"' + (ui.onlyNow ? " checked" : "") + "> Only players I can add now</label></div>" + compose + '<ul class="list">' + rows + "</ul></div></section>" +
+      '<div class="side"><section class="panel"><header><h2>Your roster</h2></header><div class="body">' +
+      '<div class="stat"><span>Active players</span><b>' + me.length + " of " + ACTIVE_LIMIT + '</b></div><div class="stat"><span>Injured reserve</span><b>' + S.ir[ME].length + " of " + IR_LIMIT + '</b></div><div class="stat"><span>F1 drivers</span><b>' + f1count(roster(ME)) + " of " + F1_CAP + '</b></div>' +
+      '<div class="stat"><span>Waiver priority this week</span><b>' + (S.priority.indexOf(ME) + 1) + " of 12</b></div><div class=\"stat\"><span>Next claims run</span><b>" + fmt(runAt) + "</b></div>" +
+      '<p class="note">Priority is worst record first and resets every week. A team that wins a claim moves to the back of the line for the rest of that run.</p></div></section>' +
+      '<section class="panel"><header><h2>How availability works</h2></header><div class="body"><p class="note" style="margin-top:0">A dropped player waits 1 day, a new arrival 2 days. He is released at the next 9:00 a.m. after that. If that 9:00 a.m. is a Tuesday, claims decide it by priority. Any other day, he is first come, first served. You cannot re-add a player you dropped for 7 days.</p></div></section></div></div>';
+  }
+  function viewClaims() {
+    var rows = S.claims.map(function (c, i) {
+      var p = pl(c.player), d = c.drop != null ? pl(c.drop) : null, st = statusOf(c.player);
+      return '<li class="row"><span class="who"><span class="nm">' + (i + 1) + ". " + esc(p.name) + "</span><span class=\"meta\">" + tag(p.sport) + "<span>" + p.pos + "</span><span>" + (d ? "Drop " + esc(d.name) : "No drop") + '</span></span><span class="meta">' + (st.kind === "claim" ? st.text : "Not claimable at the next run") + '</span></span><span class="acts"><button class="btn" data-act="up" data-i="' + i + '"' + (i === 0 ? " disabled" : "") + ' aria-label="Move up">↑</button><button class="btn" data-act="down" data-i="' + i + '"' + (i === S.claims.length - 1 ? " disabled" : "") + ' aria-label="Move down">↓</button><button class="btn danger" data-act="remove" data-i="' + i + '">Remove</button></span></li>';
+    }).join("") || '<li class="note">No claims yet. Find a player marked Waivers on the Free agents tab and press Claim.</li>';
+    var res = "";
+    if (ui.results) {
+      var mine = ui.results.filter(function (x) { return x.team === ME; }), all = ui.results;
+      res = '<section class="panel"><header><h2>Last run</h2><span class="eyebrow">' + all.filter(function (x) { return x.status === "won"; }).length + " awarded league-wide</span></header><div class=\"body\"><div class=\"scroll\"><table class=\"tbl\"><thead><tr><th>Team</th><th>Player</th><th>Result</th><th>Why</th></tr></thead><tbody>" +
+        all.sort(function (a, b) { return (a.team === ME ? 0 : 1) - (b.team === ME ? 0 : 1); }).map(function (x) { return "<tr><td>" + tn(x.team) + "</td><td>" + esc(pl(x.player).name) + '</td><td><span class="chip ' + (x.status === "won" ? "good" : x.status === "lost" ? "warn" : "bad") + '">' + x.status + "</span></td><td>" + esc(x.reason || (x.drop != null ? "Dropped " + pl(x.drop).name : "")) + "</td></tr>"; }).join("") + "</tbody></table></div>" +
+        (mine.length ? "" : '<p class="note">You had no claims in this run.</p>') + "</div></section>";
+    }
+    return '<div class="layout"><div style="display:grid;gap:16px"><section class="panel"><header><h2>My claims</h2><span class="eyebrow">Run: ' + fmt(nextRun(S.now)) + '</span></header><div class="body"><ol class="list">' + rows + '</ol><p class="note">If two claims could both win, the higher one is tried first. If a claim fails (lost to a better priority, roster full, F1 cap), the next one is tried. Your priority: ' + (S.priority.indexOf(ME) + 1) + ' of 12.</p><div class="acts" style="margin-top:12px"><button class="btn primary" data-act="run">Run the Tuesday 9:00 a.m. processing now</button></div></div></section>' + res + '</div><div class="side"><section class="panel"><header><h2>Pending removal</h2></header><div class="body"><p class="note" style="margin:0">Dropped players are on waivers for at least a day, then released at the next 9:00 a.m. Your recent drops are blocked from re-adding for 7 days.</p></div></section></div></div>';
+  }
+  function tstatus(t) {
+    var m = { proposed: ["acc", "Proposed"], pending_veto: ["warn", "In 24-hour review"], completed: ["good", "Completed"], declined: ["bad", "Declined"], withdrawn: ["", "Withdrawn"], vetoed: ["bad", "Vetoed"], expired: ["", "Expired"], failed: ["bad", "Could not complete"] }[t.status];
+    return '<span class="chip ' + m[0] + '">' + m[1] + "</span>";
+  }
+  function tcard(t) {
+    function side(ids) { return ids.map(function (i) { var p = pl(i); return '<span class="p">' + tag(p.sport) + " " + esc(p.name) + "</span>"; }).join(""); }
+    var acts = "", extra = "";
+    if (t.status === "proposed" && t.partner === ME) acts = '<button class="btn primary" data-act="accept" data-id="' + t.id + '">Accept</button><button class="btn" data-act="decline" data-id="' + t.id + '">Decline</button>';
+    if (t.status === "proposed" && t.proposer === ME) acts = '<button class="btn" data-act="withdraw" data-id="' + t.id + '">Withdraw</button><button class="btn" data-act="simaccept" data-id="' + t.id + '">Demo: ' + tn(t.partner) + " accepts</button>";
+    if (t.status === "pending_veto") extra = '<div class="note" style="margin:0">Completes ' + fmt(t.veto_until) + " unless the commissioner vetoes it first.</div>";
+    if (t.status === "pending_veto" && $("comm").checked) extra += '<div class="acts"><input type="text" id="vr' + t.id + '" placeholder="Reason (required)" style="padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-width:0;flex:1"><button class="btn danger" data-act="veto" data-id="' + t.id + '">Veto</button></div>';
+    if (t.note) extra += '<div class="note" style="margin:0">' + esc(t.note) + "</div>";
+    var dr = Object.keys(t.drops).map(function (k) { return t.drops[k].length ? tn(+k) + " also drops " + names(t.drops[k]) : ""; }).filter(Boolean).join("; ");
+    return '<div class="trade"><div class="acts" style="justify-content:space-between"><b>' + tn(t.proposer) + " → " + tn(t.partner) + "</b>" + tstatus(t) + '</div><div class="legs"><div class="leg"><b>' + tn(t.proposer) + " sends</b>" + side(t.give) + '</div><div class="leg"><b>' + tn(t.partner) + " sends</b>" + side(t.get) + "</div></div>" + (dr ? '<div class="note" style="margin:0">' + esc(dr) + "</div>" : "") + extra + (acts ? '<div class="acts">' + acts + "</div>" : "") + "</div>";
+  }
+  function viewTrades() {
+    var d = ui.tradeDraft || (ui.tradeDraft = { partner: (ME + 1) % TEAMS, give: [], get: [], drops: [] });
+    var closed = S.now >= DEADLINE;
+    function rosterList(team, key) {
+      return roster(team).map(function (id) {
+        var p = pl(id), lk = isLocked(team, id), on = d[key].indexOf(id) >= 0;
+        return '<label class="row' + (lk ? " off" : "") + '"><input type="checkbox" data-act="pick" data-key="' + key + '" data-id="' + id + '"' + (on ? " checked" : "") + (lk ? " disabled" : "") + '><span class="who"><span class="nm">' + esc(p.name) + '</span><span class="meta">' + tag(p.sport) + "<span>" + p.pos + "</span>" + (S.ir[team].indexOf(id) >= 0 ? '<span class="chip">IR</span>' : "") + (lk ? '<span class="chip warn">Locked lineup</span>' : "") + inj(p) + "</span></span></label>";
+      }).join("");
+    }
+    var give = d.give, myKeep = roster(ME).filter(function (x) { return give.indexOf(x) < 0 && !isLocked(ME, x); });
+    var draftTrade = { proposer: ME, partner: d.partner, give: d.give, get: d.get, drops: {} }; draftTrade.drops[ME] = d.drops;
+    var problem = d.give.length || d.get.length ? tradeProblem(draftTrade, true, S.now) : "Pick at least one player on each side";
+    var dropBox = '<details' + (d.drops.length || (problem && /drops|active players/.test(problem)) ? " open" : "") + '><summary class="note" style="cursor:pointer">Players you would drop to make room (optional)</summary><div class="list" style="margin-top:8px;display:grid;gap:6px">' + myKeep.map(function (id) { var p = pl(id); return '<label class="row"><input type="checkbox" data-act="pick" data-key="drops" data-id="' + id + '"' + (d.drops.indexOf(id) >= 0 ? " checked" : "") + '><span class="who"><span class="nm">' + esc(p.name) + '</span><span class="meta">' + tag(p.sport) + "<span>" + p.pos + "</span></span></span></label>"; }).join("") + "</div></details>";
+    var incoming = S.trades.filter(function (t) { return t.partner === ME && t.status === "proposed"; }), out = S.trades.filter(function (t) { return t.proposer === ME && t.status === "proposed"; });
+    var rev = S.trades.filter(function (t) { return t.status === "pending_veto"; }), done = S.trades.filter(function (t) { return ["proposed", "pending_veto"].indexOf(t.status) < 0; });
+    var sec = function (title, list, empty) { return '<section class="panel"><header><h2>' + title + "</h2></header><div class=\"body\" style=\"display:grid;gap:8px\">" + (list.length ? list.map(tcard).join("") : '<p class="note" style="margin:0">' + empty + "</p>") + "</div></section>"; };
+    return '<div class="banner panel" style="padding:10px 16px">' + (closed ? '<b>Trades are closed.</b> The deadline was the end of week 44 (' + fmt(DEADLINE) + ").</div>" : "<b>Trades are open</b> until the end of week 44 (" + fmt(DEADLINE) + "). Only players can be traded.</div>") +
+      '<div class="layout" style="margin-top:16px"><div style="display:grid;gap:16px"><section class="panel"><header><h2>Propose a trade</h2></header><div class="body"><label class="field" for="partnerSel" style="max-width:260px">Trade with<select id="partnerSel">' + Array.from({ length: TEAMS }, function (_, i) { return i === ME ? "" : '<option value="' + i + '"' + (d.partner === i ? " selected" : "") + ">" + tn(i) + "</option>"; }).join("") + '</select></label><div class="two" style="margin-top:12px"><div><div class="eyebrow" style="margin-bottom:6px">You send</div><div class="list" style="display:grid;gap:6px">' + rosterList(ME, "give") + '</div></div><div><div class="eyebrow" style="margin-bottom:6px">You get</div><div class="list" style="display:grid;gap:6px">' + rosterList(d.partner, "get") + "</div></div></div><div style=\"margin-top:12px\">" + dropBox + '</div><div class="note" style="color:' + (problem ? "var(--bad)" : "var(--good)") + '">' + esc(problem || "This trade is allowed. The other team must accept, then the commissioner has 24 hours to veto before it completes.") + '</div><div class="acts" style="margin-top:8px"><button class="btn primary" data-act="propose"' + (problem ? " disabled" : "") + ">Send proposal</button></div></div></section></div>" +
+      '<div class="side">' + sec("Offers to you", incoming, "No offers waiting.") + sec("Your proposals", out, "None waiting.") + sec("In 24-hour review", rev, "No trades in review.") + sec("Closed", done, "Nothing yet.") + "</div></div>";
+  }
+  function viewLog() {
+    return '<section class="panel"><header><h2>League activity</h2><span class="eyebrow">Newest first</span></header><div class="body"><ul class="list">' + (S.log.length ? S.log.map(function (e) { return '<li class="row"><span class="who"><span class="nm" style="white-space:normal">' + esc(e.text) + '</span><span class="meta">' + fmt(e.when) + "</span></span><span></span></li>"; }).join("") : '<li class="note">Nothing yet.</li>') + "</ul></div></section>";
+  }
+  function render() {
+    $("clockLine").textContent = fmt(S.now) + " · Week " + (Math.floor((S.now - U(2027, 1, 5, 12, 0)) / (7 * DAY)) + 1) + " · Next claims run " + fmt(nextRun(S.now));
+    document.querySelectorAll(".tab").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === ui.tab)); });
+    var lk = lineupLocked(); $("lockChip").textContent = lk ? "Lineups locked: starters can't be dropped or traded" : "Lineups open until noon: starters can move"; $("lockChip").className = "chip " + (lk ? "warn" : "good");
+    $("view").innerHTML = ui.tab === "fa" ? viewFA() : ui.tab === "claims" ? viewClaims() : ui.tab === "trades" ? viewTrades() : viewLog();
+    $("msg").textContent = ui.msg; $("msg").className = "msg" + (ui.err ? " err" : "");
+  }
+
+  // ---------- events ----------
+  function reset(key) {
+    var target = PRESETS[key];
+    S = build(BASE); ui.compose = null; ui.results = null; ui.tradeDraft = null;
+    if (target > BASE) advanceTo(target);
+    say("");
+    render();
+  }
+  $("preset").addEventListener("change", function (e) { reset(e.target.value); });
+  $("advance").addEventListener("click", function () { advanceTo(S.now + DAY); say("Advanced to " + fmt(S.now)); render(); });
+  $("comm").addEventListener("change", render);
+  document.querySelector(".tabs").addEventListener("click", function (e) { var b = e.target.closest("[data-tab]"); if (b) { ui.tab = b.dataset.tab; say(""); render(); } });
+  $("view").addEventListener("input", function (e) { if (e.target.id === "qIn") { ui.q = e.target.value; var pos = e.target.selectionStart; render(); var q = $("qIn"); q.focus(); q.setSelectionRange(pos, pos); } });
+  $("view").addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.id === "sportSel") { ui.sport = t.value; render(); }
+    else if (t.id === "nowOnly") { ui.onlyNow = t.checked; render(); }
+    else if (t.id === "partnerSel") { ui.tradeDraft.partner = +t.value; ui.tradeDraft.get = []; render(); }
+    else if (t.dataset && t.dataset.act === "pick") {
+      var arr = ui.tradeDraft[t.dataset.key], id = +t.dataset.id, i = arr.indexOf(id);
+      if (t.checked && i < 0) arr.push(id); if (!t.checked && i >= 0) arr.splice(i, 1);
+      if (t.dataset.key === "give") ui.tradeDraft.drops = ui.tradeDraft.drops.filter(function (x) { return arr.indexOf(x) < 0; });
+      render();
+    }
+  });
+  $("view").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-act]"); if (!b || b.disabled || b.type === "checkbox") return;
+    var act = b.dataset.act, id = +b.dataset.id;
+    if (act === "start") { ui.compose = { id: id, mode: b.dataset.mode }; say(""); render(); return; }
+    if (act === "cancel") { ui.compose = null; say(""); render(); return; }
+    if (act === "confirm") {
+      var c = ui.compose, dv = $("dropSel").value, drop = dv === "" ? null : +dv;
+      var pr = addProblem(ME, c.id, drop, S.now);
+      if (pr) { say(pr, true); return; }
+      if (c.mode === "add") { if (drop != null) dropPlayer(ME, drop, S.now, "to make room for an add"); addToBench(ME, c.id, S.now, "free agent"); say(pl(c.id).name + " added to your bench."); }
+      else { S.claims.push({ player: c.id, drop: drop }); say("Claim placed for " + pl(c.id).name + ". It runs " + fmt(nextRun(S.now))); }
+      ui.compose = null; render(); return;
+    }
+    if (act === "up" || act === "down") { var i = +b.dataset.i, j = act === "up" ? i - 1 : i + 1; var x = S.claims[i]; S.claims[i] = S.claims[j]; S.claims[j] = x; render(); return; }
+    if (act === "remove") { S.claims.splice(+b.dataset.i, 1); render(); return; }
+    if (act === "run") { var t = nextRun(S.now); var mine = S.claims.slice(); S.claims = []; ui.results = execRun(t, mine); settle(); say("Ran the " + fmt(t) + " processing"); render(); return; }
+    var T = S.trades.filter(function (t) { return t.id === id; })[0];
+    if (act === "propose") {
+      var d = ui.tradeDraft, tr = { id: S.tradeId++, proposer: ME, partner: d.partner, give: d.give.slice(), get: d.get.slice(), drops: {}, status: "proposed", at: S.now, note: "" };
+      tr.drops[ME] = d.drops.slice(); var pr2 = tradeProblem(tr, true, S.now); if (pr2) { say(pr2, true); return; }
+      S.trades.push(tr); ui.tradeDraft = null; say("Proposal sent to " + tn(tr.partner) + "."); render(); return;
+    }
+    if (act === "accept" || act === "simaccept") {
+      var pr3 = tradeProblem(T, true, S.now); if (pr3) { say(pr3, true); return; }
+      T.status = "pending_veto"; T.accepted_at = S.now; T.veto_until = S.now + VETO_WINDOW; say("Accepted. The commissioner has 24 hours to veto, then it completes."); render(); return;
+    }
+    if (act === "decline") { T.status = "declined"; say("Offer declined."); render(); return; }
+    if (act === "withdraw") { T.status = "withdrawn"; say("Proposal withdrawn."); render(); return; }
+    if (act === "veto") {
+      var rs = document.getElementById("vr" + id).value.trim();
+      if (!rs) { say("A reason is required for a veto.", true); return; }
+      if (S.now >= T.veto_until) { say("The 24-hour window has ended.", true); return; }
+      T.status = "vetoed"; T.note = "Vetoed: " + rs; S.log.unshift({ when: S.now, text: "Commissioner vetoed trade " + T.id + ": " + rs }); say("Trade vetoed."); render(); return;
+    }
+  });
+  window.__wt = { get S() { return S; }, ui: ui, ME: ME, advanceTo: advanceTo, nextRun: nextRun, fmt: fmt, reset: reset };
+  reset("sat");
+})();
+</script>

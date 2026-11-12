@@ -1,0 +1,17 @@
+name: Feed check
+# Run by hand, once before launch and any time a feed misbehaves. Calls each free sports service once and reports whether the answers look the way our
+# readers expect (OK / FAIL and which fields are missing). It changes nothing. Open the run and read the "Summary"; send it to Claude if anything says FAIL.
+on:
+  workflow_dispatch: {}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe the feeds
+        run: |
+          set +e
+          python3 tools/feed_probe.py 2>&1 | tee probe.txt
+          { echo '### Feed check'; echo '```'; cat probe.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit 0

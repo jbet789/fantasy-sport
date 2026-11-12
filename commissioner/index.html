@@ -1,0 +1,408 @@
+<title>Commissioner Tools</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+:root {
+  --bg: #edf0f3; --surface: #ffffff; --surface-2: #f5f7f9; --ink: #14202a; --muted: #566676; --line: #d3dae1;
+  --accent: #0a6a73; --accent-ink: #ffffff; --accent-soft: #d6edef; --bad: #b3261e; --bad-soft: #f8dedb; --good: #1d7a43; --good-soft: #dcf0e3; --warn: #a85f00; --warn-soft: #f9e8cf;
+  --nfl: #8a4a2e; --nba: #c25f16; --mlb: #2a5db0; --nhl: #1f86a1; --mls: #36853a; --f1: #ad2b5a;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1920; --surface: #15232d; --surface-2: #1a2b37; --ink: #e5ecf1; --muted: #97a9b7; --line: #2a3d4a;
+    --accent: #5ccdd6; --accent-ink: #052529; --accent-soft: #143439; --bad: #ff8a80; --bad-soft: #3b1f1d; --good: #7bd89c; --good-soft: #183425; --warn: #f2b45e; --warn-soft: #3a2c14;
+    --nfl: #d18b6b; --nba: #f1975a; --mlb: #7ea8ee; --nhl: #6cc3da; --mls: #7fcb82; --f1: #ee7ca4;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1920; --surface: #15232d; --surface-2: #1a2b37; --ink: #e5ecf1; --muted: #97a9b7; --line: #2a3d4a;
+  --accent: #5ccdd6; --accent-ink: #052529; --accent-soft: #143439; --bad: #ff8a80; --bad-soft: #3b1f1d; --good: #7bd89c; --good-soft: #183425; --warn: #f2b45e; --warn-soft: #3a2c14;
+  --nfl: #d18b6b; --nba: #f1975a; --mlb: #7ea8ee; --nhl: #6cc3da; --mls: #7fcb82; --f1: #ee7ca4;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+button, select, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 16px; }
+.wrap > *, #view { min-width: 0; }
+.eyebrow { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; }
+.top h1 { font-size: 28px; letter-spacing: -0.01em; }
+.badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; font-size: 11.5px; color: var(--muted); background: var(--surface); }
+.bar { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+.field { display: grid; gap: 2px; font-size: 12px; color: var(--muted); min-width: 0; }
+.field select, .field input, .field textarea { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); max-width: 100%; min-width: 0; }
+.field textarea { resize: vertical; min-height: 60px; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+.tab { border: 1px solid transparent; background: none; padding: 7px 14px; border-radius: 8px; font-weight: 500; color: var(--muted); }
+.tab[aria-selected="true"] { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.panel > header { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.panel > header h2 { font-size: 16px; }
+.panel .body { padding: 12px 16px 16px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.stack { display: grid; gap: 16px; min-width: 0; }
+.scroll { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th, .tbl td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tbl th { font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.tbl td.num, .tbl th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.tbl select, .tbl input { padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); min-width: 0; }
+.tbl input[type=number] { width: 64px; }
+.chip { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); display: inline-block; white-space: nowrap; }
+.chip.good { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.chip.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.chip.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.chip.acc { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
+.tag { display: inline-block; min-width: 36px; text-align: center; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--c); border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 12%, var(--surface)); }
+.s-NFL { --c: var(--nfl); } .s-NBA { --c: var(--nba); } .s-MLB { --c: var(--mlb); }
+.s-NHL { --c: var(--nhl); } .s-MLS { --c: var(--mls); } .s-F1 { --c: var(--f1); }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; font-weight: 500; font-size: 13px; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.danger { color: var(--bad); }
+.btn.sm { padding: 3px 8px; font-size: 12px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.note { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+.msg { min-height: 20px; font-size: 13px; color: var(--muted); }
+.msg.err { color: var(--bad); }
+.msg.ok { color: var(--good); }
+.form { display: grid; gap: 10px; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.stat { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.stat:last-child { border-bottom: 0; }
+.stat b { font-variant-numeric: tabular-nums; }
+.acts { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.event { border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); padding: 10px 12px; display: grid; gap: 8px; }
+.event.open { border-color: var(--accent); }
+.evhead { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.evhead b { font-family: var(--font-display); font-size: 15px; }
+.probs { margin: 0; padding-left: 18px; color: var(--bad); font-size: 13px; }
+.diff { font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 620px) { .two { grid-template-columns: minmax(0, 1fr); } .top h1 { font-size: 24px; } .tabs { margin-left: 0; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow" id="clockLine"></div>
+      <h1>Commissioner tools</h1>
+    </div>
+    <span class="badge">Prototype: sample data, nothing is saved</span>
+  </div>
+  <section class="bar" aria-label="Demo controls">
+    <label class="field" for="preset">Pretend it is
+      <select id="preset">
+        <option value="mon">Monday Mar 29, 8:00 p.m. (week 12 still running)</option>
+        <option value="tue" selected>Tuesday Mar 30, 12:01 p.m. (week 12 just ended)</option>
+        <option value="wed1159">Wednesday Mar 31, 11:59 a.m. (1 minute left to correct)</option>
+        <option value="wed1201">Wednesday Mar 31, 12:01 p.m. (week 12 is final)</option>
+      </select>
+    </label>
+    <div class="tabs" role="tablist" aria-label="Screens">
+      <button class="tab" role="tab" type="button" data-tab="corr" aria-selected="true">Stat corrections</button>
+      <button class="tab" role="tab" type="button" data-tab="bonus" aria-selected="false">Bonus challenges</button>
+      <button class="tab" role="tab" type="button" data-tab="trades" aria-selected="false">Trade review</button>
+      <button class="tab" role="tab" type="button" data-tab="audit" aria-selected="false">Audit log</button>
+    </div>
+  </section>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  <div id="view"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var W = {"NFL":{"Passing yards":0.04,"Passing TD":4,"Interception thrown":-2,"Rushing yards":0.1,"Rushing TD":6,"Receiving yards":0.1,"Receptions (half-PPR)":0.5,"Receiving TD":6,"Fumble lost":-2,"2-point conversion":2},
+    "NBA":{"Points":1,"Rebounds":1.2,"Assists":1.5,"Steals":2.5,"Blocks":2.5,"Turnovers":-1},
+    "MLB hitter":{"Singles":1,"Doubles":2,"Triples":3,"Home runs":4,"Runs":1,"RBI":1,"Walks":1,"Stolen bases":2,"Strikeouts":-0.5},
+    "MLB pitcher":{"Innings pitched":3,"Strikeouts":1,"Earned runs":-2,"Hits allowed":-1,"Walks allowed":-1,"Win":5,"Save":5},
+    "NHL skater":{"Goals":3,"Assists":2,"Plus/minus":0.5,"Shots on goal":0.4,"Blocked shots":0.4},
+    "NHL goalie":{"Wins":4,"Saves":0.2,"Goals against":-1,"Shutouts":3},
+    "MLS":{"Goals":6,"Assists":3,"Shots on target":1,"Key passes":1,"Tackles won":0.5,"Appearances (60+ minutes)":1,"Clean sheet (GK/DEF)":4,"Saves (GK)":0.5,"Goals conceded (GK/DEF)":-1,"Yellow cards":-1,"Red cards":-3},
+    "F1":{"Positions gained":1,"Fastest lap":3,"Did not finish":-5}};
+  var F1_STATS = ["Race finish position", "Qualifying position", "Sprint finish position"];
+  var RACE = [40, 32, 26, 22, 18, 15, 12, 10, 8, 6, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0], SPRINT = [8, 7, 6, 5, 4, 3, 2, 1];
+  var NEG_OK = { "Plus/minus": 1, "Positions gained": 1 };
+  var BANDS = [[1, 30], [2, 24], [3, 20], [4, 16], [6, 10], [11, 5], [21, 2]];
+  var ZERO_STATUSES = ["Missed cut", "Withdrew", "Did not start", "Not classified"];
+  var DAY = 864e5, H = 36e5;
+  var SEASON_START = Date.UTC(2027, 1 - 1, 5);
+  var U = function (y, m, d, h, mi) { return Date.UTC(y, m - 1, d, h || 0, mi || 0); };
+  var PRESETS = { mon: U(2027, 3, 29, 20, 0), tue: U(2027, 3, 30, 12, 1), wed1159: U(2027, 3, 31, 11, 59), wed1201: U(2027, 3, 31, 12, 1) };
+  var DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], MONS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function fmt(ms) { var d = new Date(ms), h = d.getUTCHours(), m = d.getUTCMinutes(); return DAYS[d.getUTCDay()] + " " + MONS[d.getUTCMonth()] + " " + d.getUTCDate() + ", " + ((h + 11) % 12 + 1) + ":" + (m < 10 ? "0" : "") + m + " " + (h >= 12 ? "p.m." : "a.m."); }
+  function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  // ---- calendar (mirrors engine/commissioner.py) ----
+  function weekLock(w) { return SEASON_START + 7 * w * DAY + 12 * H; }       // Tuesday noon that ends week w
+  function finalAt(w) { return weekLock(w) + 24 * H; }
+  function weekOf(ms) { return Math.floor((ms - (SEASON_START + 12 * H)) / (7 * DAY)) + 1; }
+  function isFinal(w, now) { return now >= finalAt(w); }
+
+  // ---- players and stats ----
+  var PLAYERS = {
+    "Marco Okafor": ["NFL", "QB"], "Hakim Cardona": ["MLB", "Hitter"], "Leo Farrow": ["MLB", "SP"], "Sami Iverson": ["NBA", "Wing"],
+    "Uri Ashby": ["NHL", "Skater"], "Lars Esposito": ["NHL", "Goalie"], "Omar Varga": ["MLS", "Midfielder"], "Jonas Lowry": ["F1", "Driver"]
+  };
+  var VALUES0 = {
+    12: { "Marco Okafor": { "Passing yards": 287, "Passing TD": 2, "Interception thrown": 1, "Rushing yards": 22, "Games played": 1 },
+      "Hakim Cardona": { "Singles": 3, "Home runs": 1, "Runs": 2, "RBI": 3, "Strikeouts": 2, "Games played": 6 },
+      "Leo Farrow": { "Innings pitched": 6, "Strikeouts": 8, "Earned runs": 2, "Win": 1, "Games played": 1 },
+      "Sami Iverson": { "Points": 28, "Rebounds": 7, "Assists": 5, "Steals": 2, "Turnovers": 3, "Games played": 3 },
+      "Uri Ashby": { "Goals": 1, "Assists": 1, "Plus/minus": 2, "Shots on goal": 5, "Games played": 3 },
+      "Lars Esposito": { "Wins": 1, "Saves": 31, "Goals against": 2, "Games played": 1 },
+      "Omar Varga": { "Goals": 1, "Assists": 1, "Key passes": 3, "Games played": 1 },
+      "Jonas Lowry": { "Race finish position": 3, "Qualifying position": 2, "Positions gained": 2, "Fastest lap": 1, "Games played": 1 } },
+    11: { "Marco Okafor": { "Passing yards": 240, "Passing TD": 1, "Games played": 1 }, "Hakim Cardona": { "Singles": 4, "Doubles": 1, "Games played": 6 },
+      "Sami Iverson": { "Points": 19, "Rebounds": 9, "Games played": 2 } }
+  };
+  function profile(sport, pos) { return sport === "MLB" ? (pos === "Hitter" ? "MLB hitter" : "MLB pitcher") : sport === "NHL" ? (pos === "Goalie" ? "NHL goalie" : "NHL skater") : sport; }
+  function validStats(player) {
+    var p = PLAYERS[player], list = ["Games played"];
+    if (p[0] === "F1") list = list.concat(F1_STATS);
+    return list.concat(Object.keys(W[profile(p[0], p[1])]));
+  }
+  function native(player, stats) {
+    var p = PLAYERS[player], prof = profile(p[0], p[1]), tot = 0;
+    Object.keys(stats).forEach(function (s) {
+      var v = stats[s];
+      if (s === "Games played") return;
+      if (p[0] === "F1" && s === "Race finish position") tot += RACE[v - 1] || 0;
+      else if (p[0] === "F1" && s === "Qualifying position") tot += v === 1 ? 5 : v <= 3 ? 3 : 0;
+      else if (p[0] === "F1" && s === "Sprint finish position") tot += (v >= 1 && v <= 8) ? SPRINT[v - 1] : 0;
+      else tot += v * W[prof][s];
+    });
+    return Math.round(tot * 100) / 100;
+  }
+
+  // ---- bonus rules (mirrors engine/bonus.py and commissioner.validate_results) ----
+  function placePts(p) { var x = 0; BANDS.forEach(function (b) { if (p >= b[0]) x = b[1]; }); return x; }
+  function bonusPts(status, place, tied) { if (status !== "Placed" || place == null) return 0; tied = Math.max(1, tied); var s = 0; for (var i = 0; i < tied; i++) s += placePts(place + i); return s / tied; }
+  function validate(entries) {
+    var probs = [], counts = {};
+    Object.keys(entries).forEach(function (who) {
+      var e = entries[who];
+      if (e.status === "Placed") {
+        if (!(Number.isInteger(e.place) && e.place >= 1)) probs.push(who + ": placed entrants need a place of 1 or more");
+        else counts[e.place] = (counts[e.place] || 0) + 1;
+      } else if (ZERO_STATUSES.indexOf(e.status) < 0) probs.push(who + ": unknown status " + e.status);
+      else if (e.place != null) probs.push(who + ": " + e.status + " entrants have no place");
+    });
+    var expected = 1;
+    Object.keys(counts).map(Number).sort(function (a, b) { return a - b; }).forEach(function (p) {
+      if (p !== expected) probs.push(p > expected ? "places jump from " + expected + " to " + p : "place " + p + " overlaps an earlier tie");
+      expected = p + counts[p];
+    });
+    return probs;
+  }
+
+  // ---- state ----
+  var S, ui = { tab: "corr", week: 12, player: "Hakim Cardona", stat: "Home runs", val: "", reason: "", open: null, draft: {}, msg: "", kind: "" };
+  var $ = function (id) { return document.getElementById(id); };
+  function say(t, kind) { ui.msg = t || ""; ui.kind = kind || ""; }
+  var TEAMS = Array.from({ length: 12 }, function (_, i) { return i === 4 ? "Team 5 (you)" : "Team " + (i + 1); });
+
+  function build(now) {
+    var vals = {};
+    Object.keys(VALUES0).forEach(function (w) { Object.keys(VALUES0[w]).forEach(function (p) { Object.keys(VALUES0[w][p]).forEach(function (s) { vals[p + "|" + w + "|" + s] = VALUES0[w][p][s]; }); }); });
+    var names = function (pre, n) { var out = []; for (var i = 1; i <= n; i++) out.push(pre + " " + i); return out; };
+    var mushers = ["Aino Rask", "Bram Olsen", "Cleo Tran", "Dag Holm", "Elin Vik", "Faro Quint", "Gus Ibsen", "Hedda Lund", "Ivo Marsh", "Jora Nell", "Kasi Poe", "Lenn Dray", "Mika Sorn", "Nils Ebb", "Orla Finch", "Pell Ward", "Quin Aska", "Rolf Ek", "Sunna Day", "Tor Brandt", "Una Pike", "Vale Orr", "Wren Kask", "Yuri Stal"];
+    var horses = ["Desert Lantern", "Golden Meridian", "Night Caravan", "Silver Mirage", "Oasis Prince", "Falcon's Oath", "Crimson Dune", "Saffron Wind", "Royal Cinder", "Blue Minaret", "Starlit Wager", "Amber Tide", "Quiet Thunder", "Ivory Sandstorm"];
+    var picks = function (list, per) { var o = {}; for (var t = 0; t < 12; t++) o[t] = list.slice(t * per, t * per + per); return o; };
+    var s = { now: now, vals: vals, log: [], audit: [], entries: {}, trades: [], nextCorr: 1 };
+    s.events = [
+      { id: "idit", name: "Iditarod", ends: U(2027, 3, 14, 12), hold: true, concluded: null, entrants: mushers, picks: picks(mushers, 2), entries: {}, entered: false },
+      { id: "dubai", name: "Dubai World Cup", ends: U(2027, 3, 27, 19), hold: false, concluded: U(2027, 3, 27, 19), entrants: horses, picks: picks(horses, 1), entries: {}, entered: false },
+      { id: "masters", name: "Masters (sample entrants)", ends: U(2027, 4, 11, 19), hold: false, concluded: U(2027, 4, 11, 19), entrants: names("Golfer", 24), picks: picks(names("Golfer", 24), 2), entries: {}, entered: false }
+    ];
+    s.events[0].entries = { "Aino Rask": { status: "Placed", place: 1 } };      // first musher home; the rest still racing
+    s.trades = [
+      { id: 1, a: 6, b: 9, give: ["Ellery Falk (NBA Wing)"], get: ["Nico Gallo (NFL RB)"], accepted: U(2027, 3, 30, 10, 0), status: "review", note: "" },
+      { id: 2, a: 1, b: 7, give: ["Cass Alder (MLB SP)", "Beau Rasmus (NHL Skater)"], get: ["Rory Zeller (NBA Big)"], accepted: U(2027, 3, 29, 9, 0), status: "review", note: "" }
+    ];
+    return s;
+  }
+  function addAudit(kind, text) { S.audit.unshift({ when: S.now, kind: kind, text: text, by: "Commissioner" }); }
+
+  // ---- corrections ----
+  function validateCorrection(player, week, stat, val, reason) {
+    if (isFinal(week, S.now)) return "Week " + week + " became final " + fmt(finalAt(week)) + " ET. Corrections are ignored.";
+    if (!PLAYERS[player]) return "Unknown player.";
+    if (validStats(player).indexOf(stat) < 0) return stat + " is not a scored stat for " + PLAYERS[player][0] + " " + PLAYERS[player][1] + ".";
+    if (!reason || !reason.trim()) return "A reason is required.";
+    if (val === "" || isNaN(Number(val))) return "Enter the corrected value.";
+    if (Number(val) < 0 && !NEG_OK[stat]) return stat + " cannot be negative.";
+    return null;
+  }
+  function playerStats(player, week) {
+    var o = {}; Object.keys(S.vals).forEach(function (k) { var p = k.split("|"); if (p[0] === player && +p[1] === week) o[p[2]] = S.vals[k]; }); return o;
+  }
+  function correct(player, week, stat, val, reason) {
+    var key = player + "|" + week + "|" + stat, old = S.vals[key], before = native(player, playerStats(player, week));
+    S.vals[key] = val;
+    var after = native(player, playerStats(player, week));
+    var e = { id: S.nextCorr++, when: S.now, player: player, week: week, stat: stat, old: old === undefined ? null : old, nw: val, reason: reason.trim(), reverts: null, before: before, after: after };
+    S.log.push(e); addAudit("Correction", "#" + e.id + " " + player + ", week " + week + ", " + stat + ": " + (e.old == null ? "none" : e.old) + " to " + val + ". " + e.reason);
+    return e;
+  }
+  function revert(id) {
+    var orig = S.log.filter(function (e) { return e.id === id; })[0];
+    if (!orig) return "No correction " + id + ".";
+    if (S.log.some(function (e) { return e.reverts === id; })) return "Correction " + id + " was already reverted.";
+    if (isFinal(orig.week, S.now)) return "Week " + orig.week + " is final.";
+    var key = orig.player + "|" + orig.week + "|" + orig.stat;
+    if (orig.old == null) delete S.vals[key]; else S.vals[key] = orig.old;
+    var e = { id: S.nextCorr++, when: S.now, player: orig.player, week: orig.week, stat: orig.stat, old: orig.nw, nw: orig.old, reason: "Reverted correction " + id, reverts: id, before: native(orig.player, playerStats(orig.player, orig.week)), after: null };
+    e.after = native(orig.player, playerStats(orig.player, orig.week));
+    S.log.push(e); addAudit("Revert", "#" + e.id + " reverted #" + id + " (" + orig.player + ", week " + orig.week + ", " + orig.stat + ").");
+    return null;
+  }
+
+  // ---- views ----
+  function weekChip(w) {
+    if (isFinal(w, S.now)) return '<span class="chip bad">Final: corrections refused</span>';
+    if (S.now >= weekLock(w)) return '<span class="chip warn">Correction window open until ' + fmt(finalAt(w)) + "</span>";
+    return '<span class="chip acc">In progress</span>';
+  }
+  function viewCorr() {
+    var w = ui.week, valid = validStats(ui.player), cur = S.vals[ui.player + "|" + w + "|" + ui.stat];
+    if (valid.indexOf(ui.stat) < 0) ui.stat = valid[1];
+    cur = S.vals[ui.player + "|" + w + "|" + ui.stat];
+    var p = PLAYERS[ui.player], st = playerStats(ui.player, w), nat = native(ui.player, st);
+    var prev = "";
+    if (ui.val !== "" && !isNaN(Number(ui.val))) { var t = {}; Object.keys(st).forEach(function (k) { t[k] = st[k]; }); t[ui.stat] = Number(ui.val); prev = "Native points: " + nat.toFixed(1) + " to " + native(ui.player, t).toFixed(1); }
+    var log = S.log.slice().reverse().map(function (e) {
+      var done = S.log.some(function (x) { return x.reverts === e.id; });
+      return "<tr><td class=\"num\">" + e.id + "</td><td>" + fmt(e.when) + "</td><td>" + esc(e.player) + " <span class=\"note\" style=\"margin:0\">wk " + e.week + "</span></td><td>" + esc(e.stat) + '</td><td class="num diff">' + (e.old == null ? "none" : e.old) + " → " + (e.nw == null ? "none" : e.nw) + "</td><td>" + esc(e.reason) + "</td><td>" + (e.reverts ? '<span class="chip">Revert</span>' : done ? '<span class="chip">Reverted</span>' : '<button class="btn sm" data-act="revert" data-id="' + e.id + '">Revert</button>') + "</td></tr>";
+    }).join("");
+    return '<div class="layout"><div class="stack"><section class="panel"><header><h2>Correct a stat</h2>' + weekChip(w) + '</header><div class="body"><div class="form"><div class="two"><label class="field" for="fWeek">Week<select id="fWeek">' + [12, 11].map(function (x) { return '<option value="' + x + '"' + (w === x ? " selected" : "") + ">Week " + x + "</option>"; }).join("") + '</select></label><label class="field" for="fPlayer">Player<select id="fPlayer">' + Object.keys(PLAYERS).map(function (n) { return '<option' + (n === ui.player ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("") + '</select></label></div><div class="two"><label class="field" for="fStat">Stat<select id="fStat">' + valid.map(function (s) { return "<option" + (s === ui.stat ? " selected" : "") + ">" + esc(s) + "</option>"; }).join("") + '</select></label><label class="field" for="fVal">New value (now ' + (cur === undefined ? "none" : cur) + ')<input id="fVal" type="number" step="any" value="' + esc(ui.val) + '"></label></div><label class="field" for="fReason">Reason (required, goes in the audit log)<textarea id="fReason" placeholder="For example: scorer changed a double to a home run">' + esc(ui.reason) + '</textarea></label><div class="note" style="margin:0">' + (prev ? esc(prev) + ". " : "") + 'Only this player\'s score changes, because baselines are frozen before the week.</div><div class="acts"><button class="btn primary" data-act="correct">Apply correction</button></div></div></div></section>' +
+      '<section class="panel"><header><h2>Corrections log</h2><span class="eyebrow">' + S.log.length + " entries</span></header><div class=\"body\"><div class=\"scroll\"><table class=\"tbl\"><thead><tr><th class=\"num\">#</th><th>When</th><th>Player</th><th>Stat</th><th class=\"num\">Change</th><th>Reason</th><th></th></tr></thead><tbody>" + (log || '<tr><td colspan="7" class="note">No corrections yet.</td></tr>') + "</tbody></table></div></div></section></div>" +
+      '<div class="stack"><section class="panel"><header><h2>' + esc(ui.player) + ", week " + w + '</h2><span class="tag s-' + p[0] + '">' + p[0] + "</span></header><div class=\"body\">" + (Object.keys(st).length ? Object.keys(st).map(function (k) { return '<div class="stat"><span>' + esc(k) + "</span><b>" + st[k] + "</b></div>"; }).join("") + '<div class="stat"><span>Native points</span><b>' + nat.toFixed(1) + "</b></div>" : '<p class="note" style="margin:0">No stats recorded this week.</p>') + '</div></section><section class="panel"><header><h2>Rules</h2></header><div class="body"><p class="note" style="margin-top:0">Results are final 24 hours after the week ends, Wednesday noon ET. After that, corrections are ignored. Every correction needs a reason and is logged with the old and new value. A revert adds a new log line; the log is never edited.</p></div></section></div></div>';
+  }
+
+  function evStatus(ev) {
+    if (ev.hold && ev.concluded == null) return ["warn", "Held until the race concludes"];
+    if (Object.keys(ev.entries).length) return ["good", "Scored in week " + weekOf(ev.concluded)];
+    return S.now < ev.ends ? ["", "Not finished yet"] : ["acc", "Waiting for results"];
+  }
+  function teamPoints(ev) {
+    if (!(Object.keys(ev.entries).length && ev.concluded != null)) return null;
+    var ties = {}; Object.keys(ev.entries).forEach(function (n) { var e = ev.entries[n]; if (e.status === "Placed") ties[e.place] = (ties[e.place] || 0) + 1; });
+    var pts = {}; Object.keys(ev.entries).forEach(function (n) { var e = ev.entries[n]; pts[n] = bonusPts(e.status, e.place, e.status === "Placed" ? ties[e.place] : 1); });
+    var out = {}; Object.keys(ev.picks).forEach(function (t) { out[t] = ev.picks[t].reduce(function (a, n) { return a + (pts[n] || 0); }, 0); });
+    return out;
+  }
+  function draftFor(ev) {
+    if (!ui.draft[ev.id]) { var d = {}; ev.entrants.forEach(function (n) { var e = ev.entries[n]; d[n] = e ? { status: e.status, place: e.place == null ? "" : e.place } : { status: "", place: "" }; }); ui.draft[ev.id] = d; }
+    return ui.draft[ev.id];
+  }
+  function draftEntries(ev) {
+    var d = draftFor(ev), out = {};
+    ev.entrants.forEach(function (n) { var x = d[n]; if (!x.status) return; out[n] = { status: x.status, place: x.status === "Placed" ? (x.place === "" ? null : Number(x.place)) : (x.place === "" ? null : Number(x.place)) }; });
+    return out;
+  }
+  function viewBonus() {
+    return '<div class="stack">' + S.events.map(function (ev) {
+      var st = evStatus(ev), open = ui.open === ev.id, tp = teamPoints(ev), finished = S.now >= ev.ends;
+      var owner = {}; Object.keys(ev.picks).forEach(function (t) { ev.picks[t].forEach(function (n) { owner[n] = t; }); });
+      var head = '<div class="evhead"><b>' + esc(ev.name) + '</b><span class="acts"><span class="chip ' + st[0] + '">' + st[1] + '</span><span class="eyebrow">Ends ' + fmt(ev.ends) + (ev.hold ? " · points held" : "") + "</span></span></div>";
+      var body = "";
+      if (open) {
+        var d = draftFor(ev), probs = validate(draftEntries(ev));
+        body = '<div class="scroll"><table class="tbl"><thead><tr><th>Entrant</th><th>Picked by</th><th>Status</th><th>Place</th></tr></thead><tbody>' + ev.entrants.map(function (n) {
+          var x = d[n];
+          return "<tr><td>" + esc(n) + "</td><td>" + (owner[n] !== undefined ? esc(TEAMS[owner[n]]) : '<span class="note" style="margin:0">Not drafted</span>') + '</td><td><select data-act="status" data-ev="' + ev.id + '" data-n="' + esc(n) + '" aria-label="Status for ' + esc(n) + '"><option value="">Not entered</option><option' + (x.status === "Placed" ? " selected" : "") + ">Placed</option>" + ZERO_STATUSES.map(function (z) { return "<option" + (x.status === z ? " selected" : "") + ">" + z + "</option>"; }).join("") + '</select></td><td><input type="number" min="1" step="1" data-act="place" data-ev="' + ev.id + '" data-n="' + esc(n) + '" value="' + esc(x.place) + '"' + (x.status === "Placed" ? "" : " disabled") + ' aria-label="Place for ' + esc(n) + '"></td></tr>';
+        }).join("") + "</tbody></table></div>" + (probs.length ? '<ul class="probs">' + probs.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + "</ul>" : "") +
+          '<div class="acts"><button class="btn primary" data-act="saveEv" data-ev="' + ev.id + '"' + (probs.length || !finished ? " disabled" : "") + '>Save results</button><button class="btn" data-act="closeEv">Close</button></div><p class="note" style="margin:0">Ties share a place and the next place skips them: three tied for 2nd means the next is 5th. Tied entrants share the average of the places they cover. Withdrawn, missed-cut, did-not-start and not-classified entrants score 0, and a pick that scores 0 is never replaced.</p>';
+      } else {
+        body = '<div class="acts"><button class="btn" data-act="openEv" data-ev="' + ev.id + '"' + (finished ? "" : " disabled title=\"The event has not finished\"") + ">" + (Object.keys(ev.entries).length ? "Edit results" : "Enter results") + "</button>" +
+          (ev.hold && ev.concluded == null ? '<button class="btn" data-act="conclude" data-ev="' + ev.id + '"' + (Object.keys(ev.entries).length ? "" : " disabled") + ">Mark race concluded</button>" : "") + "</div>";
+        if (ev.hold && ev.concluded == null) body += '<p class="note" style="margin:0">No points are awarded as mushers finish. All points release together, in the week the race concludes, once you mark it concluded.</p>';
+        if (tp) {
+          var rows = Object.keys(tp).map(Number).sort(function (a, b) { return tp[b] - tp[a]; });
+          body += '<div class="scroll"><table class="tbl"><thead><tr><th>Team</th><th>Picks</th><th class="num">Bonus points</th></tr></thead><tbody>' + rows.map(function (t) { return "<tr><td>" + esc(TEAMS[t]) + "</td><td>" + ev.picks[t].map(esc).join(", ") + '</td><td class="num">' + tp[t].toFixed(1) + "</td></tr>"; }).join("") + "</tbody></table></div>";
+        }
+      }
+      return '<section class="event' + (open ? " open" : "") + '">' + head + body + "</section>";
+    }).join("") + "</div>";
+  }
+
+  function viewTrades() {
+    function leg(a) { return a.map(esc).join(", "); }
+    var cards = S.trades.map(function (t) {
+      var until = t.accepted + 24 * H, st = t.status, auto = st === "review" && S.now >= until;
+      var chip = st === "vetoed" ? '<span class="chip bad">Vetoed</span>' : auto ? '<span class="chip good">Completed</span>' : '<span class="chip warn">In 24-hour review</span>';
+      var acts = "";
+      if (st === "review" && !auto) acts = '<div class="acts"><input type="text" id="vr' + t.id + '" placeholder="Reason (required)" aria-label="Veto reason" style="padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-width:0;flex:1"><button class="btn danger" data-act="veto" data-id="' + t.id + '">Veto</button></div>';
+      return '<section class="event"><div class="evhead"><b>' + esc(TEAMS[t.a]) + " ↔ " + esc(TEAMS[t.b]) + "</b>" + chip + '</div><div class="two"><div><div class="eyebrow">' + esc(TEAMS[t.a]) + " sends</div>" + leg(t.give) + '</div><div><div class="eyebrow">' + esc(TEAMS[t.b]) + " sends</div>" + leg(t.get) + '</div></div><div class="note" style="margin:0">' + (st === "vetoed" ? esc(t.note) : auto ? "Completed " + fmt(until) + "." : "Accepted " + fmt(t.accepted) + ". Completes " + fmt(until) + " unless vetoed.") + "</div>" + acts + "</section>";
+    }).join("");
+    return '<div class="layout"><div class="stack">' + cards + '</div><section class="panel"><header><h2>Veto rules</h2></header><div class="body"><p class="note" style="margin-top:0">The commissioner can veto a trade only during its 24-hour window and only with a written reason, for clear collusion. A trade that clears the window completes on its own, and acquired players start on the bench.</p></div></section></div>';
+  }
+  function viewAudit() {
+    return '<section class="panel"><header><h2>Audit log</h2><span class="eyebrow">Newest first · every commissioner action</span></header><div class="body"><div class="scroll"><table class="tbl"><thead><tr><th>When</th><th>Action</th><th>Details</th><th>By</th></tr></thead><tbody>' + (S.audit.length ? S.audit.map(function (a) { return "<tr><td>" + fmt(a.when) + '</td><td><span class="chip acc">' + esc(a.kind) + "</span></td><td>" + esc(a.text) + "</td><td>" + esc(a.by) + "</td></tr>"; }).join("") : '<tr><td colspan="4" class="note">Nothing yet. Make a correction, enter results or veto a trade.</td></tr>') + "</tbody></table></div></div></section>";
+  }
+  function render() {
+    $("clockLine").textContent = fmt(S.now) + " ET · Week " + weekOf(S.now);
+    document.querySelectorAll(".tab").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === ui.tab)); });
+    $("view").innerHTML = ui.tab === "corr" ? viewCorr() : ui.tab === "bonus" ? viewBonus() : ui.tab === "trades" ? viewTrades() : viewAudit();
+    $("msg").textContent = ui.msg; $("msg").className = "msg" + (ui.kind ? " " + ui.kind : "");
+  }
+
+  // ---- events ----
+  function ev(id) { return S.events.filter(function (e) { return e.id === id; })[0]; }
+  document.querySelector(".tabs").addEventListener("click", function (e) { var b = e.target.closest("[data-tab]"); if (b) { ui.tab = b.dataset.tab; say(""); render(); } });
+  $("preset").addEventListener("change", function (e) { S.now = PRESETS[e.target.value]; say(""); render(); });
+  $("view").addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.id === "fVal") ui.val = t.value; else if (t.id === "fReason") ui.reason = t.value;
+    else if (t.dataset && t.dataset.act === "place") { draftFor(ev(t.dataset.ev))[t.dataset.n].place = t.value; render(); var q = document.querySelector('input[data-act=place][data-n="' + t.dataset.n.replace(/"/g, '\\"') + '"]'); if (q) q.focus(); }
+  });
+  $("view").addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.id === "fWeek") { ui.week = +t.value; say(""); render(); }
+    else if (t.id === "fPlayer") { ui.player = t.value; ui.stat = validStats(t.value)[1]; ui.val = ""; render(); }
+    else if (t.id === "fStat") { ui.stat = t.value; ui.val = ""; render(); }
+    else if (t.dataset && t.dataset.act === "status") { var d = draftFor(ev(t.dataset.ev))[t.dataset.n]; d.status = t.value; if (t.value !== "Placed") d.place = ""; render(); }
+  });
+  $("view").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-act]"); if (!b || b.disabled || b.tagName === "SELECT" || b.tagName === "INPUT") return;
+    var act = b.dataset.act, id = +b.dataset.id;
+    if (act === "correct") {
+      var err = validateCorrection(ui.player, ui.week, ui.stat, ui.val, ui.reason);
+      if (err) { say(err, "err"); render(); return; }
+      var r = correct(ui.player, ui.week, ui.stat, Number(ui.val), ui.reason);
+      say("Correction #" + r.id + " saved. " + ui.player + " native points " + r.before.toFixed(1) + " to " + r.after.toFixed(1) + ". Recompute week " + ui.week + " scores for this player.", "ok"); ui.val = ""; ui.reason = ""; render(); return;
+    }
+    if (act === "revert") { var er = revert(id); say(er || "Reverted correction " + id + ".", er ? "err" : "ok"); render(); return; }
+    if (act === "openEv") { ui.open = b.dataset.ev; say(""); render(); return; }
+    if (act === "closeEv") { ui.open = null; ui.draft = {}; render(); return; }
+    if (act === "saveEv") {
+      var e1 = ev(b.dataset.ev), ent = draftEntries(e1), probs = validate(ent);
+      if (probs.length) { say(probs[0], "err"); render(); return; }
+      e1.entries = ent; ui.open = null; ui.draft = {};
+      addAudit("Bonus results", e1.name + ": results entered for " + Object.keys(ent).length + " entrants" + (e1.hold && e1.concluded == null ? " (held until concluded)." : "."));
+      say(e1.name + " results saved." + (e1.hold && e1.concluded == null ? " Points stay held until you mark the race concluded." : ""), "ok"); render(); return;
+    }
+    if (act === "conclude") { var e2 = ev(b.dataset.ev); e2.concluded = S.now; addAudit("Race concluded", e2.name + " marked concluded. Points score in week " + weekOf(S.now) + "."); say(e2.name + " concluded. Points score in week " + weekOf(S.now) + ".", "ok"); render(); return; }
+    if (act === "veto") {
+      var t = S.trades.filter(function (x) { return x.id === id; })[0], rs = document.getElementById("vr" + id).value.trim();
+      if (!rs) { say("A reason is required for a veto.", "err"); render(); return; }
+      if (S.now >= t.accepted + 24 * H) { say("The 24-hour window has ended.", "err"); render(); return; }
+      t.status = "vetoed"; t.note = "Vetoed " + fmt(S.now) + ": " + rs; addAudit("Trade veto", "Trade " + id + " (" + TEAMS[t.a] + " ↔ " + TEAMS[t.b] + "): " + rs); say("Trade vetoed.", "ok"); render();
+    }
+  });
+  window.__cm = { get S() { return S; }, ui: ui, native: native, validate: validate, bonusPts: bonusPts, weekOf: weekOf, finalAt: finalAt, fmt: fmt };
+  S = build(PRESETS.tue); render();
+})();
+</script>

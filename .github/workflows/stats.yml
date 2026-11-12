@@ -1,0 +1,57 @@
+name: Stats
+# Hourly: read finished and live games from the free sports feeds and store the player stats, then the injury designations. Each sport is its own step so one broken
+# feed does not stop the others. In the off-season a sport simply finds no games. MLS has no free feed: it is loaded from a CSV by hand.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      lookback_hours:
+        description: "How many hours back to read (default 30; use 240 to catch up after an outage)"
+        required: false
+        default: ""
+concurrency:
+  group: stats
+  cancel-in-progress: false
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+      LOOKBACK: ${{ github.event.inputs.lookback_hours }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the secret
+        run: |
+          if [ -z "$DATABASE_URL" ]; then echo "SUPABASE_DB_URL secret is not set"; exit 1; fi
+      - name: MLB
+        continue-on-error: true
+        run: python3 tools/ingest.py stats --sport mlb ${LOOKBACK:+--lookback-hours $LOOKBACK}
+      - name: NHL
+        continue-on-error: true
+        run: python3 tools/ingest.py stats --sport nhl ${LOOKBACK:+--lookback-hours $LOOKBACK}
+      - name: NBA
+        continue-on-error: true
+        run: python3 tools/ingest.py stats --sport nba ${LOOKBACK:+--lookback-hours $LOOKBACK}
+      - name: NFL
+        continue-on-error: true
+        run: python3 tools/ingest.py stats --sport nfl ${LOOKBACK:+--lookback-hours $LOOKBACK}
+      - name: Formula 1
+        continue-on-error: true
+        run: python3 tools/ingest.py stats --sport f1
+      - name: Injuries (NFL)
+        continue-on-error: true
+        run: python3 tools/ingest.py injuries --sport nfl
+      - name: Injuries (MLB)
+        continue-on-error: true
+        run: python3 tools/ingest.py injuries --sport mlb
+      - name: Injuries (NBA)
+        continue-on-error: true
+        run: python3 tools/ingest.py injuries --sport nba
+      - name: Injuries (NHL)
+        continue-on-error: true
+        run: python3 tools/ingest.py injuries --sport nhl
+      - name: Injuries (MLS)
+        continue-on-error: true
+        run: python3 tools/ingest.py injuries --sport mls

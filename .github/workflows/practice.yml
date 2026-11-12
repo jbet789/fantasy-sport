@@ -1,0 +1,39 @@
+name: Practice draft
+# A rehearsal on a throwaway database inside this job (never your real league): 12 bots draft 20 rounds through the real draft rules
+# and pick clock, then the result is checked. Run it after any change to the draft, and once before draft day. Read the result under "Summary".
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "Random seed (change it to get a different draft)"
+        required: false
+        default: "1"
+jobs:
+  practice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Play the draft
+        run: |
+          python3 tools/practice_draft.py --db fl_practice --seed "${{ github.event.inputs.seed || '1' }}" | tee practice.txt
+      - name: Show the result
+        if: always()
+        run: |
+          echo '### Practice draft' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat practice.txt >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

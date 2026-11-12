@@ -1,0 +1,21 @@
+name: Scoring tick
+# Every 10 minutes: score the week, settle trades, run due waivers. Safe to repeat; the database clock decides what is due.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+concurrency:
+  group: tick
+  cancel-in-progress: false
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the tick
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then echo "SUPABASE_DB_URL secret is not set"; exit 1; fi
+          python3 tools/tick.py

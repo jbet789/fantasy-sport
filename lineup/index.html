@@ -1,0 +1,395 @@
+<title>Lineup and Matchup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+:root {
+  --bg: #edf0f3; --surface: #ffffff; --surface-2: #f5f7f9; --ink: #14202a; --muted: #566676; --line: #d3dae1;
+  --accent: #0a6a73; --accent-ink: #ffffff; --accent-soft: #d6edef; --bad: #b3261e; --bad-soft: #f8dedb; --good: #1d7a43; --good-soft: #dcf0e3; --warn: #a85f00; --warn-soft: #f9e8cf;
+  --nfl: #8a4a2e; --nba: #c25f16; --mlb: #2a5db0; --nhl: #1f86a1; --mls: #36853a; --f1: #ad2b5a;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1920; --surface: #15232d; --surface-2: #1a2b37; --ink: #e5ecf1; --muted: #97a9b7; --line: #2a3d4a;
+    --accent: #5ccdd6; --accent-ink: #052529; --accent-soft: #143439; --bad: #ff8a80; --bad-soft: #3b1f1d; --good: #7bd89c; --good-soft: #183425; --warn: #f2b45e; --warn-soft: #3a2c14;
+    --nfl: #d18b6b; --nba: #f1975a; --mlb: #7ea8ee; --nhl: #6cc3da; --mls: #7fcb82; --f1: #ee7ca4;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1920; --surface: #15232d; --surface-2: #1a2b37; --ink: #e5ecf1; --muted: #97a9b7; --line: #2a3d4a;
+  --accent: #5ccdd6; --accent-ink: #052529; --accent-soft: #143439; --bad: #ff8a80; --bad-soft: #3b1f1d; --good: #7bd89c; --good-soft: #183425; --warn: #f2b45e; --warn-soft: #3a2c14;
+  --nfl: #d18b6b; --nba: #f1975a; --mlb: #7ea8ee; --nhl: #6cc3da; --mls: #7fcb82; --f1: #ee7ca4;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+button, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 16px; }
+.eyebrow { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; }
+.top h1 { font-size: 28px; letter-spacing: -0.01em; }
+.badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; font-size: 11.5px; color: var(--muted); background: var(--surface); }
+.bar { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+.field { display: grid; gap: 2px; font-size: 12px; color: var(--muted); min-width: 0; }
+.field select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); max-width: 100%; }
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 0; }
+.tabs { display: flex; gap: 4px; }
+.tab { border: 1px solid transparent; background: none; padding: 7px 14px; border-radius: 8px; font-weight: 500; color: var(--muted); }
+.tab[aria-selected="true"] { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.panel > header { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.panel > header h2 { font-size: 16px; }
+.panel .body { padding: 12px 16px 16px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+.side { display: grid; gap: 16px; }
+ol.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.row.sel { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.row.empty { border-style: dashed; background: none; color: var(--muted); }
+.row .who { min-width: 0; display: grid; gap: 1px; }
+.row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.row .meta { color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.row .acts { display: flex; gap: 6px; align-items: center; }
+.pick { all: unset; cursor: pointer; display: block; min-width: 0; }
+.pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.tag { display: inline-block; min-width: 36px; text-align: center; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--c); border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 12%, var(--surface)); }
+.s-NFL { --c: var(--nfl); } .s-NBA { --c: var(--nba); } .s-MLB { --c: var(--mlb); }
+.s-NHL { --c: var(--nhl); } .s-MLS { --c: var(--mls); } .s-F1 { --c: var(--f1); }
+.inj { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: var(--bad-soft); color: var(--bad); }
+.inj.soft { background: var(--warn-soft); color: var(--warn); }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 5px 10px; font-weight: 500; font-size: 13px; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.zone { margin-bottom: 16px; }
+.zone:last-child { margin-bottom: 0; }
+.zone h3 { font-size: 14px; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; gap: 8px; }
+.zone h3 small { font-family: var(--font-body); color: var(--muted); font-weight: 500; font-size: 12px; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 12px; padding: 8px 10px; border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 8px; }
+.actions[hidden] { display: none; }
+.note { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+.msg { min-height: 20px; font-size: 13px; color: var(--muted); }
+.msg.err { color: var(--bad); }
+.lock { padding: 12px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+.lock.locked { border-color: var(--warn); background: var(--warn-soft); }
+.lock b { font-family: var(--font-display); font-size: 18px; display: block; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.stat { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.stat:last-child { border-bottom: 0; }
+.stat b { font-variant-numeric: tabular-nums; }
+.vs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.score { display: grid; gap: 2px; text-align: center; padding: 16px; }
+.score .big { font-family: var(--font-display); font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.score .who { font-weight: 600; }
+.score.win { background: var(--good-soft); }
+.banner { padding: 10px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; }
+.pts { font-variant-numeric: tabular-nums; font-weight: 600; }
+.pts.none { color: var(--muted); font-weight: 400; }
+.pts.neg { color: var(--bad); }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 620px) { .vs { grid-template-columns: minmax(0, 1fr); } .top h1 { font-size: 24px; } .score .big { font-size: 36px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow" id="weekLine"></div>
+      <h1 id="teamName">Your team</h1>
+    </div>
+    <span class="badge">Prototype: sample players, changes are not saved</span>
+  </div>
+
+  <section class="bar" aria-label="View options">
+    <label class="field" for="weekSel">Week
+      <select id="weekSel"></select>
+    </label>
+    <label class="field" for="teamSel">Lineup shown (everyone's is public)
+      <select id="teamSel"></select>
+    </label>
+    <label class="field" for="clockSel">Pretend it is
+      <select id="clockSel">
+        <option value="tue0301">Tuesday 3:01 a.m. (lineups just reopened)</option>
+        <option value="tue1159">Tuesday 11:59 a.m. (1 minute left)</option>
+        <option value="tue1201">Tuesday 12:01 p.m. (locked)</option>
+        <option value="mon">Monday 8:00 a.m. (still locked)</option>
+      </select>
+    </label>
+    <label class="check" for="holder"><input type="checkbox" id="holder"> I hold an injury mulligan</label>
+    <div class="tabs" role="tablist" aria-label="Screens" style="margin-left:auto">
+      <button class="tab" role="tab" id="tab-lineup" aria-selected="true" aria-controls="view-lineup" type="button">Lineup</button>
+      <button class="tab" role="tab" id="tab-matchup" aria-selected="false" aria-controls="view-matchup" type="button">Matchup</button>
+    </div>
+  </section>
+
+  <div id="view-lineup" role="tabpanel" aria-labelledby="tab-lineup">
+    <div class="layout">
+      <section class="panel">
+        <header><h2>Lineup</h2><span class="eyebrow" id="lineupCount"></span></header>
+        <div class="body">
+          <div class="actions" id="actions" hidden></div>
+          <div class="msg" id="msg" role="status" aria-live="polite"></div>
+          <div class="zone"><h3>Starters <small id="startersHint">10 spots. Only starters who play score.</small></h3><ol class="list" id="starters"></ol></div>
+          <div class="zone"><h3>Bench <small>10 spots</small></h3><ol class="list" id="bench"></ol></div>
+          <div class="zone"><h3>Injured reserve <small>4 spots. Needs an official "Out" or injured-list designation.</small></h3><ol class="list" id="ir"></ol></div>
+        </div>
+      </section>
+      <div class="side">
+        <section class="lock" id="lockCard"></section>
+        <section class="panel">
+          <header><h2>Lineup check</h2></header>
+          <div class="body">
+            <div class="eyebrow">Sports among your starters</div>
+            <div class="chips" id="sportChips"></div>
+            <div class="stat"><span>Variety bonus if all play</span><b id="varietyNow"></b></div>
+            <div class="stat"><span>F1 drivers on roster</span><b id="f1Count"></b></div>
+            <div class="stat"><span>Active players</span><b id="activeCount"></b></div>
+            <p class="note">The variety bonus is +2 for each sport beyond the first, counting only starters who played, capped at +10.</p>
+          </div>
+        </section>
+        <section class="panel" id="mullCard">
+          <header><h2>Injury mulligan</h2></header>
+          <div class="body" id="mullBody"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-matchup" role="tabpanel" aria-labelledby="tab-matchup" hidden>
+    <div class="banner" id="matchBanner"></div>
+    <div class="vs" style="margin-top:16px" id="matchCols"></div>
+    <p class="note">The matchup uses your current lineup as if it were locked, and scores are invented sample values. Points are each player's weekly z-score times 10, floored at -10.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var SPORTS = ["NFL", "NBA", "MLB", "NHL", "MLS", "F1"];
+  var POS = { NFL: ["QB", "RB", "WR", "TE"], NBA: ["Guard", "Wing", "Big"], MLB: ["SP", "RP", "Hitter"], NHL: ["Skater", "Goalie"], MLS: ["Forward", "Midfielder", "Defender", "Goalkeeper"], F1: ["Driver"] };
+  var FIRST = "Aaron Abel Adrian Alec Amir Andre Anton Arlo Beau Bennett Caleb Callum Cass Dario Dante Dmitri Eli Emeka Felix Finn Gabe Hakim Hugo Idris Ivan Jalen Jonas Kai Kellan Kofi Lars Leo Luca Malik Marco Mateo Nico Noor Omar Orin Pablo Quinn Rafa Reid Rory Sami Soren Tariq Teo Tobias Uri Viktor Wes Xavier Yusuf Zane Zeke".split(" ");
+  var LAST = "Abara Alder Ashby Bexley Brandt Calloway Cardona Castellan Dunmore Ellery Farrow Fenwick Garrity Halloran Hargrove Ibarra Jessup Kessler Lindqvist Marlowe Nwosu Okafor Pellegrin Quillan Rasmus Salazar Thorne Ulloa Varga Whitlock Yeager Zeller Aldous Branko Corvin Dacosta Esposito Falk Gallo Hendry Iverson Jarrah Koval Lowry Maddox Navarro Oyelaran Prescott Quade Renfro Stroud Tamsin Underhill Vance Wexler".split(" ");
+  var ME = 4, TEAMS = 12, STARTERS = 10, BENCH = 10, IRCAP = 4;
+  var SEASON_START = Date.UTC(2027, 0, 5);
+  var IR_OK = { "Out": 1, "Injured list": 1 };
+
+  function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function hash(n) { return rng(n * 2654435761 % 4294967296)(); }
+
+  var players = {}, nextId = 1, teams = [];
+  function build() {
+    for (var t = 0; t < TEAMS; t++) {
+      var r = rng(9000 + t * 17), ids = [], f1 = 0, used = {};
+      var mix = ["NFL", "NBA", "MLB", "NHL", "MLS", "NFL", "NBA", "MLB", "NHL", "MLB", "NBA", "NFL", "NHL", "MLB", "NBA", "NFL", "MLS", "NHL", "MLB", "NBA", "NFL", "MLB"];
+      for (var i = 0; i < 22; i++) {
+        var sport = mix[(i + t * 3) % mix.length];
+        if (r() < 0.07 && f1 < 2) { sport = "F1"; f1++; }
+        if (sport === "F1" && f1 > 2) sport = "NBA";
+        var name; do { name = FIRST[Math.floor(r() * FIRST.length)] + " " + LAST[Math.floor(r() * LAST.length)]; } while (used[name]); used[name] = 1;
+        var inj = null, x = r();
+        if (x < 0.07) inj = "Out"; else if (x < 0.14) inj = "Questionable"; else if (x < 0.18) inj = "Day-to-day";
+        var p = { id: nextId++, name: name, sport: sport, pos: POS[sport][Math.floor(r() * POS[sport].length)], last: Math.round((r() * 34 - 6) * 10) / 10, inj: inj };
+        players[p.id] = p; ids.push(p.id);
+      }
+      // start with the first 10 as starters, next 10 bench, last 2 on IR (must be IR-eligible: mark them Out)
+      var ir = ids.splice(20, 2);
+      ir.forEach(function (id) { players[id].inj = "Out"; });
+      teams.push({ name: t === ME ? "Team " + (t + 1) + " (you)" : "Team " + (t + 1), starters: ids.slice(0, STARTERS), bench: ids.slice(STARTERS, STARTERS + BENCH), ir: ir, mullUsed: false });
+    }
+    // make sure the user's team has an injured starter and an eligible IR candidate on the bench, so the rules can be tried
+    var me = teams[ME];
+    players[me.starters[2]].inj = "Questionable";
+    players[me.starters[6]].inj = "Out";
+    players[me.bench[3]].inj = "Out";
+  }
+  build();
+
+  var $ = function (id) { return document.getElementById(id); };
+  var view = { week: 12, team: ME, clock: "tue0301", holder: false, sel: null, mull: null, tab: "lineup" };
+  var msgTimer;
+  function say(text, err) { var m = $("msg"); m.textContent = text || ""; m.className = "msg" + (err ? " err" : ""); }
+  function T() { return teams[view.team]; }
+  function mine() { return view.team === ME; }
+  function locked() { return view.clock === "tue1201" || view.clock === "mon"; }
+  function zoneOf(team, id) { return team.starters.indexOf(id) >= 0 ? "starters" : team.bench.indexOf(id) >= 0 ? "bench" : team.ir.indexOf(id) >= 0 ? "ir" : null; }
+  var CAP = { starters: STARTERS, bench: BENCH, ir: IRCAP }, ZNAME = { starters: "Starters", bench: "Bench", ir: "IR" };
+
+  function why(team, id, to, swapWith) {
+    var from = zoneOf(team, id), p = players[id];
+    if (from === to) return "Already there";
+    if (locked() && (from === "starters" || to === "starters")) return "The starting lineup is locked until Tuesday at 3:00 a.m.";
+    if (to === "ir" && !IR_OK[p.inj]) return "IR needs an official Out or injured-list designation";
+    if (swapWith) {
+      if (from === "ir" && !IR_OK[players[swapWith].inj]) return players[swapWith].name + " has no designation that allows IR";
+      return "";
+    }
+    if (team[to].length >= CAP[to]) return ZNAME[to] + " is full: swap with someone instead";
+    return "";
+  }
+  function doMove(team, id, to, swapWith) {
+    var from = zoneOf(team, id);
+    team[from].splice(team[from].indexOf(id), 1);
+    if (swapWith) { var at = team[to].indexOf(swapWith); team[to][at] = id; team[from].push(swapWith); }
+    else team[to].push(id);
+  }
+
+  function tag(s) { return '<span class="tag s-' + s + '">' + s + "</span>"; }
+  function injTag(p) { return p.inj ? '<span class="inj' + (IR_OK[p.inj] ? "" : " soft") + '">' + p.inj + "</span>" : ""; }
+  function rowHtml(team, id, zone) {
+    var p = players[id], sel = view.sel === id, canEdit = mine();
+    var acts = "", swapBtn = "";
+    if (canEdit && view.sel && view.sel !== id && zoneOf(team, view.sel) !== zone) {
+      var r = why(team, view.sel, zone, id);
+      swapBtn = '<button class="btn" data-swap="' + id + '"' + (r ? " disabled title='" + r.replace(/'/g, "") + "'" : "") + '>Swap</button>';
+    }
+    if (canEdit && view.mull) { if (zone === "bench") swapBtn = '<button class="btn primary" data-mullto="' + id + '">Swap in</button>'; else swapBtn = ""; }
+    if (canEdit && locked() && view.holder && !team.mullUsed && zone === "starters" && p.inj && !view.mull) acts = '<button class="btn" data-mull="' + id + '">Mulligan</button>';
+    var inner = '<span class="who"><span class="nm">' + p.name + '</span><span class="meta">' + tag(p.sport) + "<span>" + p.pos + "</span><span>Last week " + p.last + "</span>" + injTag(p) + "</span></span>";
+    var body = canEdit ? '<button class="pick" data-pick="' + id + '" aria-pressed="' + sel + '" aria-label="Select ' + p.name + '">' + inner + "</button>" : '<span class="who">' + inner + "</span>";
+    return '<li class="row' + (sel ? " sel" : "") + '">' + body + '<span class="acts">' + acts + swapBtn + "</span></li>";
+  }
+  function emptyRow(label) { return '<li class="row empty"><span>' + label + "</span><span></span></li>"; }
+  function listHtml(team, zone) {
+    var h = team[zone].map(function (id) { return rowHtml(team, id, zone); }).join("");
+    for (var i = team[zone].length; i < CAP[zone]; i++) h += emptyRow("Open " + (zone === "ir" ? "IR spot" : zone === "bench" ? "bench spot" : "starter spot"));
+    return h;
+  }
+
+  function sportsOf(ids) { var c = {}; ids.forEach(function (id) { var s = players[id].sport; c[s] = (c[s] || 0) + 1; }); return c; }
+  function variety(n) { return n <= 0 ? 0 : Math.min(10, 2 * (n - 1)); }
+
+  function weekInfo(w) {
+    var start = new Date(SEASON_START + 7 * (w - 1) * 864e5), end = new Date(SEASON_START + 7 * w * 864e5);
+    var f = function (d) { return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getUTCDay()] + " " + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getUTCMonth()] + " " + d.getUTCDate(); };
+    var phase = w >= 50 ? "Buffer" : w === 45 ? "Playoffs: wildcard" : w <= 47 && w >= 46 ? "Playoffs: semifinals" : w <= 49 && w >= 48 ? "Playoffs: championship" : w >= 20 && w <= 22 ? "Regular season and Cup group stage" : w === 23 ? "Regular season and Cup semifinals" : w === 24 ? "Regular season and Cup final" : "Regular season";
+    return { text: f(start) + " noon to " + f(end) + " noon", phase: phase };
+  }
+
+  function renderLineup() {
+    var t = T(), canEdit = mine();
+    $("starters").innerHTML = listHtml(t, "starters");
+    $("bench").innerHTML = listHtml(t, "bench");
+    $("ir").innerHTML = listHtml(t, "ir");
+    $("lineupCount").textContent = t.starters.length + " starters · " + t.bench.length + " bench · " + t.ir.length + " IR";
+    var sc = sportsOf(t.starters), n = Object.keys(sc).length;
+    $("sportChips").innerHTML = SPORTS.filter(function (s) { return sc[s]; }).map(function (s) { return tag(s) + " " + sc[s]; }).join("  ") || '<span class="note">No starters</span>';
+    $("varietyNow").textContent = "+" + variety(n) + " (" + n + (n === 1 ? " sport" : " sports") + ")";
+    var all = t.starters.concat(t.bench, t.ir), f1 = all.filter(function (id) { return players[id].sport === "F1"; }).length;
+    $("f1Count").textContent = f1 + " of 2";
+    $("activeCount").textContent = (t.starters.length + t.bench.length) + " of 20";
+    $("teamName").textContent = t.name;
+    $("startersHint").textContent = locked() ? "Locked until Tuesday at 3:00 a.m." : "10 spots. Only starters who play score.";
+    // lock card
+    var lc = $("lockCard"), l = locked();
+    lc.className = "lock" + (l ? " locked" : "");
+    lc.innerHTML = l ? '<div class="eyebrow">Lineup status</div><b>Locked</b><div class="note">The starting lineup reopens Tuesday at 3:00 a.m. ET, for a nine-hour window before the noon lock. Bench and IR moves are still allowed.</div>'
+      : '<div class="eyebrow">Lineup status</div><b>' + (view.clock === "tue0301" ? "Locks in 8 hours 59 minutes" : "Locks in 1 minute") + '</b><div class="note">Open from Tuesday 3:00 a.m. to noon ET. Your lineup is visible to every team at all times.</div>';
+    // actions bar
+    var ab = $("actions");
+    if (canEdit && view.sel && !view.mull) {
+      var p = players[view.sel], from = zoneOf(t, view.sel), h = "<span><b>" + p.name + "</b> selected. Move to:</span>";
+      ["starters", "bench", "ir"].forEach(function (z) {
+        if (z === from) return;
+        var r = t[z].length >= CAP[z] ? "No open spot: tap Swap on a player instead" : why(t, view.sel, z);
+        h += '<button class="btn" data-moveto="' + z + '"' + (r ? ' disabled title="' + r.replace(/"/g, "'") + '"' : "") + ">" + ZNAME[z] + "</button>";
+      });
+      h += '<button class="btn" data-cancel="1">Cancel</button>';
+      ab.innerHTML = h; ab.hidden = false;
+    } else if (canEdit && view.mull) {
+      ab.innerHTML = "<span>Choose a bench player to swap in for <b>" + players[view.mull].name + '</b>.</span><button class="btn" data-cancel="1">Cancel</button>'; ab.hidden = false;
+    } else ab.hidden = true;
+    if (!canEdit) say("Viewing " + t.name + ". Lineups are public, but only the owner can change them.");
+    // mulligan card
+    var mb = $("mullBody");
+    if (!canEdit) mb.innerHTML = '<p class="note" style="margin:0">Only the owner can use a mulligan.</p>';
+    else if (!view.holder) mb.innerHTML = '<p class="note" style="margin:0">You do not hold a mulligan. The Cup runner-up earns one, used once after the lock to swap an injured starter for a bench player.</p>';
+    else if (t.mullUsed) mb.innerHTML = '<p class="note" style="margin:0">Used. The bench player\'s full-week score replaces the injured starter\'s, and the variety bonus is recalculated.</p>';
+    else mb.innerHTML = '<p class="note" style="margin:0">' + (locked() ? "Tap Mulligan next to an injured starter, then choose a bench player." : "Available after the lock, for a starter with an official injury designation.") + "</p>";
+  }
+
+  function pts(id, w) { var v = Math.round((hash(id * 131 + w * 7) * 38 - 12) * 10) / 10; return Math.max(-10, v); }
+  function played(id, w) { return hash(id * 977 + w * 13) > 0.2; }
+  function side(team, w, mulligan) {
+    var rows = team.starters.map(function (id) { return { id: id, p: players[id], played: played(id, w), pts: pts(id, w) }; });
+    var tot = rows.reduce(function (a, r) { return a + (r.played ? r.pts : 0); }, 0);
+    var sports = {}; rows.forEach(function (r) { if (r.played) sports[r.p.sport] = 1; });
+    var v = variety(Object.keys(sports).length);
+    var bonus = hash(team.starters[0] * 31 + w) < 0.3 ? [16, 24, 30][Math.floor(hash(w * 3 + team.starters[1]) * 3)] : 0;
+    var best = rows.reduce(function (a, r) { return r.played && r.pts > a ? r.pts : a; }, -99);
+    return { rows: rows, starters: Math.round(tot * 10) / 10, variety: v, bonus: bonus, total: Math.round((tot + v + bonus) * 10) / 10, best: best, played: rows.filter(function (r) { return r.played; }).length };
+  }
+  function fmt(n) { return (Math.round(n * 10) / 10).toFixed(1); }
+  function renderMatch() {
+    var w = view.week, a = side(teams[ME], w), oppIdx = (ME + 1 + ((w - 1) % 11)) % TEAMS; if (oppIdx === ME) oppIdx = (ME + 1) % TEAMS;
+    var b = side(teams[oppIdx], w), info = weekInfo(w);
+    var lead = a.total > b.total ? "A" : a.total < b.total ? "B" : (a.best !== b.best ? (a.best > b.best ? "A" : "B") : "T");
+    var decided = Math.abs(a.total - b.total) < 1e-9 ? "Tied on weekly total: the higher best single starter wins" + (lead === "T" ? ", then cumulative points" : "") : "";
+    $("matchBanner").innerHTML = "<span><b>" + (lead === "A" ? "You are leading" : lead === "B" ? "You are trailing" : "Dead even") + "</b> by " + fmt(Math.abs(a.total - b.total)) + " points</span><span class='note' style='margin:0'>" + info.phase + " · " + a.played + " of 10 of your starters and " + b.played + " of 10 of theirs have played" + (decided ? " · " + decided : "") + "</span>";
+    function col(team, s, win, you) {
+      var h = '<section class="panel"><div class="score' + (win ? " win" : "") + '"><div class="who">' + team.name + '</div><div class="big">' + fmt(s.total) + '</div><div class="note" style="margin:0">' + (win ? "Leading" : "Trailing") + "</div></div><div class='body'>";
+      h += '<div class="stat"><span>Starters</span><b>' + fmt(s.starters) + '</b></div><div class="stat"><span>Variety bonus</span><b>+' + s.variety + '</b></div><div class="stat"><span>Bonus challenges</span><b>+' + s.bonus + '</b></div><div class="stat"><span>Weekly total</span><b>' + fmt(s.total) + "</b></div>";
+      h += '<ol class="list" style="margin-top:12px">' + s.rows.map(function (r) {
+        var cls = r.played ? (r.pts < 0 ? "pts neg" : "pts") : "pts none";
+        return '<li class="row"><span class="who"><span class="nm">' + r.p.name + '</span><span class="meta">' + tag(r.p.sport) + "<span>" + r.p.pos + "</span>" + (r.played ? "" : "<span>Has not played</span>") + injTag(r.p) + '</span></span><span class="' + cls + '">' + (r.played ? fmt(r.pts) : "—") + "</span></li>";
+      }).join("") + "</ol></div></section>";
+      return h;
+    }
+    $("matchCols").innerHTML = col(teams[ME], a, a.total >= b.total && lead !== "B", true) + col(teams[oppIdx], b, lead === "B", false);
+    return info;
+  }
+
+  function renderAll() {
+    var info = weekInfo(view.week);
+    $("weekLine").textContent = "Week " + view.week + " · " + info.text + " · " + info.phase;
+    renderLineup();
+    renderMatch();
+  }
+
+  // events
+  $("weekSel").innerHTML = Array.from({ length: 49 }, function (_, i) { return "<option value='" + (i + 1) + "'>Week " + (i + 1) + "</option>"; }).join("");
+  $("weekSel").value = "12";
+  $("teamSel").innerHTML = teams.map(function (t, i) { return "<option value='" + i + "'>" + t.name + "</option>"; }).join("");
+  $("teamSel").value = String(ME);
+  $("weekSel").addEventListener("change", function (e) { view.week = +e.target.value; renderAll(); });
+  $("teamSel").addEventListener("change", function (e) { view.team = +e.target.value; view.sel = null; view.mull = null; say(""); renderAll(); });
+  $("clockSel").addEventListener("change", function (e) { view.clock = e.target.value; view.sel = null; view.mull = null; say(""); renderAll(); });
+  $("holder").addEventListener("change", function (e) { view.holder = e.target.checked; renderAll(); });
+  ["lineup", "matchup"].forEach(function (name) {
+    $("tab-" + name).addEventListener("click", function () {
+      view.tab = name;
+      ["lineup", "matchup"].forEach(function (n) { $("tab-" + n).setAttribute("aria-selected", String(n === name)); $("view-" + n).hidden = n !== name; });
+    });
+  });
+  $("view-lineup").addEventListener("click", function (e) {
+    var t = T(), b;
+    if ((b = e.target.closest("[data-pick]"))) { var id = +b.dataset.pick; view.sel = view.sel === id ? null : id; view.mull = null; say(""); renderLineup(); return; }
+    if (e.target.closest("[data-cancel]")) { view.sel = null; view.mull = null; say(""); renderLineup(); return; }
+    if ((b = e.target.closest("[data-moveto]")) && !b.disabled) {
+      var to = b.dataset.moveto, r = why(t, view.sel, to, null);
+      if (r) { say(r, true); return; }
+      var nm = players[view.sel].name; doMove(t, view.sel, to, null); view.sel = null; say(nm + " moved to " + ZNAME[to].toLowerCase() + "."); renderLineup(); renderMatch(); return;
+    }
+    if ((b = e.target.closest("[data-swap]")) && !b.disabled) {
+      var other = +b.dataset.swap, z = zoneOf(t, other), r2 = why(t, view.sel, z, other);
+      if (r2) { say(r2, true); return; }
+      var a = players[view.sel].name, o = players[other].name; doMove(t, view.sel, z, other); view.sel = null; say(a + " and " + o + " swapped places."); renderLineup(); renderMatch(); return;
+    }
+    if ((b = e.target.closest("[data-mull]"))) { view.mull = +b.dataset.mull; view.sel = null; say(""); renderLineup(); return; }
+    if ((b = e.target.closest("[data-mullto]"))) {
+      var st = view.mull, ben = +b.dataset.mullto;
+      doMove(t, st, "bench", ben); t.mullUsed = true; view.mull = null; say(players[ben].name + " replaces " + players[st].name + " for the week. Mulligan used."); renderLineup(); renderMatch();
+    }
+  });
+  // plain keyboard path for the select-then-act flow is the buttons themselves; nothing else needed
+  window.__lineup = { teams: teams, players: players, view: view, ME: ME };
+  renderAll();
+})();
+</script>

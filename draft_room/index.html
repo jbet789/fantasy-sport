@@ -1,0 +1,487 @@
+<title>League Draft Room</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: a command bar on top (clock + controls), then the pool/board/log on the left and your roster + queue on the right. */
+:root {
+  --bg: #edf0f3; --surface: #ffffff; --surface-2: #f5f7f9; --ink: #14202a; --muted: #566676; --line: #d3dae1;
+  --accent: #0a6a73; --accent-ink: #ffffff; --accent-soft: #d6edef; --bad: #b3261e; --good: #1d7a43; --warn: #a85f00;
+  --nfl: #8a4a2e; --nba: #c25f16; --mlb: #2a5db0; --nhl: #1f86a1; --mls: #36853a; --f1: #ad2b5a;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1920; --surface: #15232d; --surface-2: #1a2b37; --ink: #e5ecf1; --muted: #97a9b7; --line: #2a3d4a;
+    --accent: #5ccdd6; --accent-ink: #052529; --accent-soft: #143439; --bad: #ff8a80; --good: #7bd89c; --warn: #f2b45e;
+    --nfl: #d18b6b; --nba: #f1975a; --mlb: #7ea8ee; --nhl: #6cc3da; --mls: #7fcb82; --f1: #ee7ca4;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1920; --surface: #15232d; --surface-2: #1a2b37; --ink: #e5ecf1; --muted: #97a9b7; --line: #2a3d4a;
+  --accent: #5ccdd6; --accent-ink: #052529; --accent-soft: #143439; --bad: #ff8a80; --good: #7bd89c; --warn: #f2b45e;
+  --nfl: #d18b6b; --nba: #f1975a; --mlb: #7ea8ee; --nhl: #6cc3da; --mls: #7fcb82; --f1: #ee7ca4;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1280px; margin: 0 auto; display: grid; gap: 16px; }
+.eyebrow { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; }
+.top h1 { font-size: 28px; letter-spacing: -0.01em; }
+.badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; font-size: 11.5px; color: var(--muted); background: var(--surface); }
+
+.bar { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.clock-block { display: grid; gap: 6px; min-width: 0; }
+.now { font-family: var(--font-display); font-size: 22px; font-weight: 600; overflow-wrap: anywhere; }
+.now small { font-family: var(--font-body); font-weight: 500; font-size: 13px; color: var(--muted); display: block; }
+.timer { display: flex; align-items: center; gap: 12px; }
+.time { font-family: var(--font-display); font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2.6ch; line-height: 1; }
+.time.low { color: var(--bad); }
+.meter { flex: 1; height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; min-width: 60px; }
+.meter > i { display: block; height: 100%; width: 0; background: var(--accent); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-content: start; }
+.btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 7px 12px; font-weight: 500; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.field { display: grid; gap: 2px; font-size: 12px; color: var(--muted); }
+.field select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 0; }
+.msg { min-height: 20px; font-size: 13px; color: var(--muted); }
+.msg.err { color: var(--bad); }
+.upcoming { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; grid-column: 1 / -1; }
+.chip { flex: none; border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font-size: 12px; background: var(--surface-2); white-space: nowrap; }
+.chip.me { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.chip.cur { outline: 2px solid var(--accent); }
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.panel > header { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.panel > header h2 { font-size: 16px; }
+.panel .body { padding: 12px 16px 16px; }
+.tabs { display: flex; gap: 4px; }
+.tab { border: 1px solid transparent; background: none; padding: 6px 12px; border-radius: 8px; font-weight: 500; color: var(--muted); }
+.tab[aria-selected="true"] { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.filters input[type=search] { padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); min-width: 0; flex: 1 1 160px; }
+.sports { display: flex; flex-wrap: wrap; gap: 4px; }
+.sp { border: 1px solid var(--line); background: var(--surface-2); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+.sp[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.scroll { overflow: auto; max-height: 560px; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { position: sticky; top: 0; background: var(--surface-2); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); z-index: 1; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+.tag { display: inline-block; min-width: 36px; text-align: center; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--c); border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 12%, var(--surface)); }
+.s-NFL { --c: var(--nfl); } .s-NBA { --c: var(--nba); } .s-MLB { --c: var(--mlb); }
+.s-NHL { --c: var(--nhl); } .s-MLS { --c: var(--mls); } .s-F1 { --c: var(--f1); }
+.icon { border: 1px solid var(--line); background: var(--surface-2); border-radius: 6px; padding: 2px 8px; font-size: 12px; }
+.icon.on { background: var(--accent-soft); border-color: var(--accent); }
+.draftbtn { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 2px 10px; font-size: 12px; font-weight: 600; }
+.draftbtn:disabled { background: none; color: var(--muted); border-color: var(--line); cursor: not-allowed; }
+.note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+
+.board { overflow: auto; max-height: 640px; border: 1px solid var(--line); border-radius: 8px; }
+.board table { table-layout: fixed; min-width: 1100px; }
+.board th, .board td { padding: 4px; border-right: 1px solid var(--line); text-align: center; white-space: normal; }
+.board th { font-size: 11px; }
+.board th.me { color: var(--accent); }
+.board td.rn { width: 34px; background: var(--surface-2); font-weight: 600; color: var(--muted); position: sticky; left: 0; }
+.cell { height: 44px; border-radius: 5px; padding: 3px 4px; text-align: left; font-size: 11.5px; line-height: 1.2; overflow: hidden; border: 1px solid color-mix(in srgb, var(--c) 45%, var(--line)); background: color-mix(in srgb, var(--c) 13%, var(--surface)); }
+.cell b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cell span { color: var(--muted); font-size: 10.5px; }
+.empty { height: 44px; display: grid; place-items: center; color: var(--muted); font-size: 11px; border-radius: 5px; }
+.empty.cur { outline: 2px solid var(--accent); background: var(--accent-soft); color: var(--ink); font-weight: 600; }
+.empty.mine { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+
+.side { display: grid; gap: 16px; }
+ol.list, ul.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.row { display: flex; align-items: center; gap: 8px; justify-content: space-between; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); min-width: 0; }
+.row .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .nm small { color: var(--muted); }
+.row .acts { display: flex; gap: 4px; flex: none; }
+.counts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; font-size: 12px; }
+.cap { font-size: 12px; margin-bottom: 8px; color: var(--muted); }
+.cap b { color: var(--ink); }
+.cap.full b { color: var(--warn); }
+.prog { height: 6px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; margin-bottom: 10px; }
+.prog > i { display: block; height: 100%; background: var(--accent); }
+.summary { padding: 12px 16px; border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 10px; }
+.summary[hidden] { display: none; }
+@media (max-width: 1000px) {
+  .main { grid-template-columns: minmax(0, 1fr); }
+  .bar { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .time { font-size: 36px; }
+  .top h1 { font-size: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow">Friday, January 1, 2027 · 12 teams · 20 rounds · snake</div>
+      <h1>League Draft Room</h1>
+    </div>
+    <span class="badge">Prototype: sample players, 11 computer-controlled teams</span>
+  </div>
+
+  <section class="bar" aria-label="Draft clock and controls">
+    <div class="clock-block">
+      <div class="eyebrow" id="stage">Before the draft</div>
+      <div class="now" id="now">Draw the order, then start</div>
+      <div class="timer">
+        <div class="time" id="time" aria-live="off">--</div>
+        <div class="meter" aria-hidden="true"><i id="meterfill"></i></div>
+      </div>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    </div>
+    <div>
+      <div class="controls">
+        <button class="btn primary" id="startBtn" type="button">Start draft</button>
+        <button class="btn" id="redrawBtn" type="button">Redraw order</button>
+        <button class="btn" id="resetBtn" type="button">Reset</button>
+      </div>
+      <div class="controls" style="margin-top:10px">
+        <label class="field" for="clockSel">Pick clock
+          <select id="clockSel"><option value="60">60 seconds (main draft)</option><option value="30">30 seconds (bonus drafts)</option></select>
+        </label>
+        <label class="field" for="speedSel">Other teams pick
+          <select id="speedSel"><option value="700">Normal</option><option value="120">Quick</option><option value="5">Instant</option></select>
+        </label>
+        <label class="check" for="autoMe"><input type="checkbox" id="autoMe"> Autopick for me</label>
+      </div>
+    </div>
+    <div class="upcoming" id="upcoming" aria-label="Upcoming picks"></div>
+  </section>
+
+  <section class="summary" id="summary" hidden></section>
+
+  <div class="main">
+    <section class="panel">
+      <header>
+        <div class="tabs" role="tablist" aria-label="Draft views">
+          <button class="tab" role="tab" id="tab-pool" aria-selected="true" aria-controls="view-pool" type="button">Players</button>
+          <button class="tab" role="tab" id="tab-board" aria-selected="false" aria-controls="view-board" type="button">Board</button>
+          <button class="tab" role="tab" id="tab-log" aria-selected="false" aria-controls="view-log" type="button">Pick log</button>
+        </div>
+        <span class="eyebrow" id="poolCount"></span>
+      </header>
+      <div class="body">
+        <div id="view-pool" role="tabpanel" aria-labelledby="tab-pool">
+          <div class="filters">
+            <input type="search" id="q" placeholder="Search players" aria-label="Search players">
+            <div class="sports" id="sportBtns" role="group" aria-label="Filter by sport"></div>
+            <select id="posSel" aria-label="Filter by position"></select>
+            <label class="check" for="hideDrafted"><input type="checkbox" id="hideDrafted" checked> Hide drafted</label>
+          </div>
+          <div class="scroll"><table><thead><tr>
+            <th class="num">Rank</th><th>Player</th><th>Sport</th><th>Pos</th><th class="num">Last season pts</th><th>Queue</th><th>Draft</th>
+          </tr></thead><tbody id="poolRows"></tbody></table></div>
+          <p class="note">Ranked by last season's total points under this league's scoring. Rookies are listed at the bottom, unranked. All players are invented sample data.</p>
+        </div>
+        <div id="view-board" role="tabpanel" aria-labelledby="tab-board" hidden>
+          <div class="board" id="boardWrap"></div>
+        </div>
+        <div id="view-log" role="tabpanel" aria-labelledby="tab-log" hidden>
+          <div class="scroll"><table><thead><tr><th class="num">Pick</th><th>Round</th><th>Team</th><th>Player</th><th>Sport</th><th>Pos</th></tr></thead><tbody id="logRows"></tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="side">
+      <section class="panel">
+        <header><h2>Your roster</h2><span class="eyebrow" id="myCount"></span></header>
+        <div class="body">
+          <div class="prog"><i id="myProg"></i></div>
+          <div class="cap" id="f1cap"></div>
+          <div class="counts" id="myCounts"></div>
+          <ol class="list" id="myRoster"></ol>
+        </div>
+      </section>
+      <section class="panel">
+        <header><h2>Your queue</h2><span class="eyebrow">Autopick uses it first</span></header>
+        <div class="body"><ol class="list" id="queue"></ol><p class="note" id="queueNote"></p></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var TEAMS = 12, ROUNDS = 20, F1_CAP = 2;
+  var SPORTS = ["NFL", "NBA", "MLB", "NHL", "MLS", "F1"];
+  var POS = { NFL: ["QB", "RB", "WR", "TE"], NBA: ["Guard", "Wing", "Big"], MLB: ["SP", "RP", "Hitter"],
+              NHL: ["Skater", "Goalie"], MLS: ["Forward", "Midfielder", "Defender", "Goalkeeper"], F1: ["Driver"] };
+  // sport, position, count, mean last-season points, spread
+  var SPEC = [["NFL","QB",22,560,130],["NFL","RB",32,470,140],["NFL","WR",40,450,130],["NFL","TE",16,330,90],
+              ["NBA","Guard",28,600,160],["NBA","Wing",28,580,150],["NBA","Big",24,620,170],
+              ["MLB","SP",40,450,120],["MLB","RP",20,250,80],["MLB","Hitter",40,520,130],
+              ["NHL","Skater",48,380,100],["NHL","Goalie",12,430,90],
+              ["MLS","Forward",16,330,90],["MLS","Midfielder",20,300,80],["MLS","Defender",18,260,70],["MLS","Goalkeeper",6,280,60],
+              ["F1","Driver",20,520,250]];
+  var FIRST = "Aaron Abel Adrian Alec Amir Andre Anton Arlo Beau Bennett Caleb Callum Cass Dario Dante Dmitri Eli Emeka Felix Finn Gabe Hakim Hugo Idris Ivan Jalen Jonas Kai Kellan Kofi Lars Leo Luca Malik Marco Mateo Nico Noor Omar Orin Pablo Quinn Rafa Reid Rory Sami Soren Tariq Teo Tobias Uri Viktor Wes Xavier Yusuf Zane Zeke Ansel Bram Cyrus".split(" ");
+  var LAST = "Abara Alder Ashby Bexley Brandt Calloway Cardona Castellan Dunmore Ellery Farrow Fenwick Garrity Halloran Hargrove Ibarra Jessup Kessler Lindqvist Marlowe Nwosu Okafor Pellegrin Quillan Rasmus Salazar Thorne Ulloa Varga Whitlock Yeager Zeller Aldous Branko Corvin Dacosta Esposito Falk Gallo Hendry Iverson Jarrah Koval Lowry Maddox Navarro Oyelaran Prescott Quade Renfro Stroud Tamsin Underhill Vance Wexler Xiong Yardley Zorn Ackroyd Baptiste Cormac Delacroix Eberhart Fontaine Granger Holloway Ingram Jovanic Kowalczyk Lombardi Montrose Nightingale Osei Pryce Rutledge Santoro Tennant Uzun Valdez Winslow Yilmaz Zamora Ballard Crenshaw Dresner Easton Flanagan Gutierrez Hartigan".split(" ");
+
+  function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function buildPool() {
+    var r = rng(20270101), used = {}, pool = [], id = 1;
+    function randn() { var u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+    SPEC.forEach(function (s) {
+      for (var i = 0; i < s[2]; i++) {
+        var name;
+        do { name = FIRST[Math.floor(r() * FIRST.length)] + " " + LAST[Math.floor(r() * LAST.length)]; } while (used[name]);
+        used[name] = 1;
+        var rookie = r() < 0.07;
+        pool.push({ id: id++, name: name, sport: s[0], pos: s[1], pts: rookie ? null : Math.max(20, Math.round(s[3] + s[4] * randn())) });
+      }
+    });
+    pool.sort(function (a, b) {
+      if (a.pts === null && b.pts === null) return a.name < b.name ? -1 : 1;
+      if (a.pts === null) return 1; if (b.pts === null) return -1;
+      return b.pts - a.pts;
+    });
+    var rank = 0;
+    pool.forEach(function (p) { p.rank = p.pts === null ? null : ++rank; });
+    return pool;
+  }
+  var POOL = buildPool(), BYID = {};
+  POOL.forEach(function (p) { BYID[p.id] = p; });
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state, timers = { bot: null, clock: null };
+  var ui = { q: "", sport: "All", pos: "All", hide: true, tab: "pool" };
+
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function newState(keepSettings) {
+    var order = shuffle(Array.from({ length: TEAMS }, function (_, i) { return i; }));
+    var me = Math.floor(Math.random() * TEAMS);
+    var picks = [];
+    for (var rd = 1; rd <= ROUNDS; rd++) {
+      var seq = rd % 2 ? order : order.slice().reverse();
+      seq.forEach(function (t, i) { picks.push({ overall: picks.length + 1, round: rd, inRound: i + 1, team: t, player: null }); });
+    }
+    return { order: order, me: me, picks: picks, i: 0, status: "idle", rosters: Array.from({ length: TEAMS }, function () { return []; }),
+             queue: [], remaining: 0, clockSec: keepSettings ? keepSettings.clockSec : 60, delay: keepSettings ? keepSettings.delay : 700, auto: keepSettings ? keepSettings.auto : false, taken: {} };
+  }
+  function teamName(t) { return t === state.me ? "Your team" : "Team " + (t + 1); }
+
+  function legal(team, p) {
+    var r = state.rosters[team];
+    if (r.length >= ROUNDS) return "Roster is full";
+    if (p.sport === "F1" && r.filter(function (x) { return x.sport === "F1"; }).length >= F1_CAP) return "At most " + F1_CAP + " F1 drivers per team";
+    return "";
+  }
+  function bestFor(team, useQueue) {
+    var i, p;
+    if (useQueue) for (i = 0; i < state.queue.length; i++) { p = BYID[state.queue[i]]; if (!state.taken[p.id] && !legal(team, p)) return p; }
+    for (i = 0; i < POOL.length; i++) { p = POOL[i]; if (!state.taken[p.id] && !legal(team, p)) return p; }
+    return null;
+  }
+  function botChoice(team) {
+    var cands = [], i;
+    for (i = 0; i < POOL.length && cands.length < 8; i++) if (!state.taken[POOL[i].id] && !legal(team, POOL[i])) cands.push(POOL[i]);
+    var x = Math.random(); return cands[Math.min(cands.length - 1, Math.floor(x * x * cands.length))];
+  }
+  function say(text, err) { var m = $("msg"); m.textContent = text || ""; m.className = "msg" + (err ? " err" : ""); }
+
+  function makePick(p, how) {
+    var pk = state.picks[state.i];
+    pk.player = p.id; state.taken[p.id] = true;
+    state.rosters[pk.team].push(p);
+    state.queue = state.queue.filter(function (id) { return id !== p.id; });
+    state.i++;
+    if (how) say(how);
+    if (state.i >= state.picks.length) { state.status = "done"; stopTimers(); }
+    renderAll();
+    if (state.status === "running") advance();
+  }
+  function stopTimers() { clearTimeout(timers.bot); clearInterval(timers.clock); timers.bot = timers.clock = null; }
+  function advance() {
+    stopTimers();
+    if (state.status !== "running") return;
+    var pk = state.picks[state.i];
+    if (!pk) return;
+    if (pk.team === state.me && !state.auto) {
+      state.remaining = state.clockSec; updateClock();
+      var last = Date.now();
+      timers.clock = setInterval(function () {
+        var now = Date.now(); state.remaining -= (now - last) / 1000; last = now;
+        if (state.remaining <= 0) {
+          var p = bestFor(state.me, true);
+          clearInterval(timers.clock); timers.clock = null;
+          makePick(p, "Clock expired. Autopicked " + p.name + ".");
+        } else updateClock();
+      }, 200);
+    } else {
+      state.remaining = 0; updateClock();
+      timers.bot = setTimeout(function () {
+        var p = pk.team === state.me ? bestFor(state.me, true) : botChoice(pk.team);
+        makePick(p, pk.team === state.me ? "Autopicked " + p.name + " for you." : "");
+      }, state.delay);
+    }
+  }
+
+  function updateClock() {
+    var pk = state.picks[state.i], mine = state.status === "running" && pk && pk.team === state.me && !state.auto;
+    var s = Math.max(0, Math.ceil(state.remaining));
+    $("time").textContent = mine ? Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0") : "--";
+    $("time").className = "time" + (mine && s <= 10 ? " low" : "");
+    $("meterfill").style.width = mine ? Math.max(0, state.remaining / state.clockSec * 100) + "%" : "0%";
+  }
+
+  function renderStatus() {
+    var pk = state.picks[state.i], st = $("stage"), now = $("now");
+    if (state.status === "idle") { st.textContent = "Before the draft"; now.innerHTML = "You pick from slot " + (state.order.indexOf(state.me) + 1) + " in round 1<small>Random draw complete. Start when everyone is ready.</small>"; }
+    else if (state.status === "done") { st.textContent = "Draft complete"; now.innerHTML = "All " + state.picks.length + " picks are in"; }
+    else {
+      st.textContent = "Round " + pk.round + ", pick " + pk.inRound + " (overall " + pk.overall + " of " + state.picks.length + ")";
+      var mine = pk.team === state.me;
+      now.innerHTML = (mine ? "You are on the clock" : teamName(pk.team) + " is picking") + "<small>" + (state.status === "paused" ? "Paused" : mine && state.auto ? "Autopick is on for your team" : mine ? "Choose a player or let the clock autopick from your queue" : "Computer-controlled team") + "</small>";
+    }
+    var b = $("startBtn");
+    b.textContent = state.status === "idle" ? "Start draft" : state.status === "running" ? "Pause" : state.status === "paused" ? "Resume" : "Draft finished";
+    b.disabled = state.status === "done";
+    $("redrawBtn").disabled = state.status !== "idle";
+    var up = $("upcoming"); up.innerHTML = "";
+    state.picks.slice(state.i, state.i + 14).forEach(function (p, k) {
+      var c = document.createElement("span");
+      c.className = "chip" + (p.team === state.me ? " me" : "") + (k === 0 && state.status !== "idle" ? " cur" : "");
+      c.textContent = p.round + "." + p.inRound + " " + teamName(p.team);
+      up.appendChild(c);
+    });
+  }
+
+  function tag(s) { return '<span class="tag s-' + s + '">' + s + "</span>"; }
+  function renderPool() {
+    var pk = state.picks[state.i], myTurn = state.status === "running" && pk && pk.team === state.me && !state.auto;
+    var q = ui.q.trim().toLowerCase(), rows = [], n = 0, shown = 0, qset = {};
+    state.queue.forEach(function (id) { qset[id] = 1; });
+    POOL.forEach(function (p) {
+      if (ui.hide && state.taken[p.id]) return;
+      if (ui.sport !== "All" && p.sport !== ui.sport) return;
+      if (ui.pos !== "All" && p.pos !== ui.pos) return;
+      if (q && p.name.toLowerCase().indexOf(q) < 0) return;
+      n++;
+      if (shown >= 150) return;
+      shown++;
+      var taken = state.taken[p.id], why = taken ? "" : legal(state.me, p);
+      rows.push("<tr><td class='num'>" + (p.rank || "R") + "</td><td>" + p.name + "</td><td>" + tag(p.sport) + "</td><td>" + p.pos + "</td><td class='num'>" + (p.pts === null ? "—" : p.pts) +
+        "</td><td>" + (taken ? "" : "<button class='icon" + (qset[p.id] ? " on" : "") + "' data-q='" + p.id + "' aria-label='" + (qset[p.id] ? "Remove " : "Add ") + p.name + (qset[p.id] ? " from" : " to") + " queue'>" + (qset[p.id] ? "Queued" : "Queue") + "</button>") +
+        "</td><td>" + (taken ? "<small class='note'>Drafted</small>" : "<button class='draftbtn' data-d='" + p.id + "'" + (myTurn && !why ? "" : " disabled") + (why ? " title='" + why + "'" : "") + ">Draft</button>") + "</td></tr>");
+    });
+    $("poolRows").innerHTML = rows.join("") || "<tr><td colspan='7'>No players match these filters.</td></tr>";
+    $("poolCount").textContent = (n > shown ? "Showing " + shown + " of " + n : n + " players");
+  }
+  function surname(p) { return p.name.split(" ").slice(1).join(" "); }
+  function renderBoard() {
+    var h = "<table><thead><tr><th class='rn'></th>";
+    state.order.forEach(function (t) { h += "<th class='" + (t === state.me ? "me" : "") + "'>" + (t === state.me ? "Your team" : "Team " + (t + 1)) + "</th>"; });
+    h += "</tr></thead><tbody>";
+    for (var rd = 1; rd <= ROUNDS; rd++) {
+      h += "<tr><td class='rn'>" + rd + "</td>";
+      state.order.forEach(function (t) {
+        var pk = state.picks.find(function (x) { return x.round === rd && x.team === t; });
+        if (pk.player) { var p = BYID[pk.player]; h += "<td><div class='cell s-" + p.sport + "' title='" + p.name + "'><b>" + surname(p) + "</b><span>" + p.sport + " " + p.pos + "</span></div></td>"; }
+        else h += "<td><div class='empty" + (pk.overall === state.i + 1 && state.status !== "idle" && state.status !== "done" ? " cur" : "") + (t === state.me ? " mine" : "") + "'>" + rd + "." + pk.inRound + "</div></td>";
+      });
+      h += "</tr>";
+    }
+    $("boardWrap").innerHTML = h + "</tbody></table>";
+  }
+  function renderLog() {
+    var done = state.picks.slice(0, state.i).reverse().slice(0, 60);
+    $("logRows").innerHTML = done.map(function (pk) { var p = BYID[pk.player]; return "<tr><td class='num'>" + pk.overall + "</td><td>" + pk.round + "." + pk.inRound + "</td><td>" + teamName(pk.team) + "</td><td>" + p.name + "</td><td>" + tag(p.sport) + "</td><td>" + p.pos + "</td></tr>"; }).join("") || "<tr><td colspan='6'>No picks yet.</td></tr>";
+  }
+  function renderSide() {
+    var r = state.rosters[state.me], f1 = r.filter(function (x) { return x.sport === "F1"; }).length;
+    $("myCount").textContent = r.length + " of " + ROUNDS + " picks";
+    $("myProg").style.width = r.length / ROUNDS * 100 + "%";
+    $("f1cap").className = "cap" + (f1 >= F1_CAP ? " full" : "");
+    $("f1cap").innerHTML = "F1 drivers: <b>" + f1 + " of " + F1_CAP + "</b>" + (f1 >= F1_CAP ? " (cap reached)" : "");
+    $("myCounts").innerHTML = SPORTS.map(function (s) { var c = r.filter(function (x) { return x.sport === s; }).length; return c ? tag(s) + " " + c : ""; }).filter(Boolean).join("  ") || "<span class='note'>No picks yet</span>";
+    $("myRoster").innerHTML = r.map(function (p, i) { return "<li class='row'><span class='nm'><small>" + (i + 1) + ".</small> " + p.name + " <small>" + p.pos + "</small></span>" + tag(p.sport) + "</li>"; }).join("");
+    $("queue").innerHTML = state.queue.map(function (id, i) { var p = BYID[id]; return "<li class='row'><span class='nm'>" + (i + 1) + ". " + p.name + " <small>" + p.sport + " " + p.pos + "</small></span><span class='acts'><button class='icon' data-up='" + i + "' aria-label='Move " + p.name + " up'" + (i === 0 ? " disabled" : "") + ">Up</button><button class='icon' data-down='" + i + "' aria-label='Move " + p.name + " down'" + (i === state.queue.length - 1 ? " disabled" : "") + ">Down</button><button class='icon' data-rm='" + id + "' aria-label='Remove " + p.name + " from queue'>Remove</button></span></li>"; }).join("");
+    $("queueNote").textContent = state.queue.length ? "" : "Queue players with the Queue button. If the clock runs out, your team autopicks the first legal player here, then the best-ranked player left.";
+  }
+  function renderSummary() {
+    var s = $("summary");
+    if (state.status !== "done") { s.hidden = true; return; }
+    var ok = state.rosters.every(function (r) { return r.length === ROUNDS && r.filter(function (x) { return x.sport === "F1"; }).length <= F1_CAP; });
+    var mine = SPORTS.map(function (sp) { var c = state.rosters[state.me].filter(function (x) { return x.sport === sp; }).length; return sp + " " + c; }).join(" · ");
+    s.hidden = false;
+    s.innerHTML = "<h2>Draft complete</h2><p>" + state.picks.length + " picks made. Every team has " + ROUNDS + " players and no team holds more than " + F1_CAP + " F1 drivers: <b>" + (ok ? "check passed" : "check failed") + "</b>.</p><p class='note'>Your roster by sport: " + mine + "</p>";
+  }
+  function renderAll() { renderStatus(); renderPool(); renderBoard(); renderLog(); renderSide(); renderSummary(); updateClock(); }
+
+  function init(keep) {
+    stopTimers(); state = newState(keep); window.__draft = state; say("");
+    $("clockSel").value = String(state.clockSec); $("speedSel").value = String(state.delay); $("autoMe").checked = state.auto;
+    renderAll();
+  }
+
+  // events
+  $("startBtn").addEventListener("click", function () {
+    if (state.status === "idle" || state.status === "paused") { state.status = "running"; say(""); renderAll(); advance(); }
+    else if (state.status === "running") { state.status = "paused"; stopTimers(); renderAll(); }
+  });
+  $("redrawBtn").addEventListener("click", function () { init({ clockSec: state.clockSec, delay: state.delay, auto: state.auto }); });
+  $("resetBtn").addEventListener("click", function () { init({ clockSec: state.clockSec, delay: state.delay, auto: state.auto }); });
+  $("clockSel").addEventListener("change", function (e) { state.clockSec = +e.target.value; if (state.status === "running") advance(); });
+  $("speedSel").addEventListener("change", function (e) { state.delay = +e.target.value; });
+  $("autoMe").addEventListener("change", function (e) { state.auto = e.target.checked; renderAll(); if (state.status === "running") advance(); });
+  $("q").addEventListener("input", function (e) { ui.q = e.target.value; renderPool(); });
+  $("hideDrafted").addEventListener("change", function (e) { ui.hide = e.target.checked; renderPool(); });
+  $("posSel").addEventListener("change", function (e) { ui.pos = e.target.value; renderPool(); });
+  function fillPos() {
+    var list = ui.sport === "All" ? [].concat.apply([], SPORTS.map(function (s) { return POS[s]; })) : POS[ui.sport];
+    $("posSel").innerHTML = "<option>All</option>" + list.map(function (p) { return "<option>" + p + "</option>"; }).join("");
+    ui.pos = "All";
+  }
+  $("sportBtns").innerHTML = ["All"].concat(SPORTS).map(function (s) { return "<button class='sp' type='button' data-sp='" + s + "' aria-pressed='" + (s === "All") + "'>" + s + "</button>"; }).join("");
+  $("sportBtns").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-sp]"); if (!b) return;
+    ui.sport = b.dataset.sp; fillPos();
+    Array.prototype.forEach.call($("sportBtns").children, function (c) { c.setAttribute("aria-pressed", String(c === b)); });
+    renderPool();
+  });
+  $("poolRows").addEventListener("click", function (e) {
+    var q = e.target.closest("[data-q]"), d = e.target.closest("[data-d]");
+    if (q) { var id = +q.dataset.q, at = state.queue.indexOf(id); if (at >= 0) state.queue.splice(at, 1); else state.queue.push(id); renderPool(); renderSide(); }
+    if (d && !d.disabled) {
+      var pk = state.picks[state.i]; if (state.status !== "running" || pk.team !== state.me) return;
+      var p = BYID[+d.dataset.d], why = legal(state.me, p);
+      if (why) { say(why, true); return; }
+      makePick(p, "You drafted " + p.name + ".");
+    }
+  });
+  $("queue").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || b.disabled) return;
+    var a = state.queue;
+    if (b.dataset.up) { var i = +b.dataset.up; var t = a[i - 1]; a[i - 1] = a[i]; a[i] = t; }
+    if (b.dataset.down) { var j = +b.dataset.down; var u = a[j + 1]; a[j + 1] = a[j]; a[j] = u; }
+    if (b.dataset.rm) a.splice(a.indexOf(+b.dataset.rm), 1);
+    renderSide(); renderPool();
+  });
+  ["pool", "board", "log"].forEach(function (name) {
+    $("tab-" + name).addEventListener("click", function () {
+      ["pool", "board", "log"].forEach(function (n) { $("tab-" + n).setAttribute("aria-selected", String(n === name)); $("view-" + n).hidden = n !== name; });
+    });
+  });
+  fillPos();
+  init();
+})();
+</script>

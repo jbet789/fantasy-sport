@@ -1,0 +1,232 @@
+{
+  "scale": 10,
+  "floor": -10,
+  "variety_per_sport": 2,
+  "variety_cap": 10,
+  "starter_slots": 10,
+  "bench_slots": 10,
+  "ir_slots": 4,
+  "max_f1_per_team": 20,
+  "playoff_by_record": 4,
+  "playoff_wildcards": 2,
+  "min_pool_size": 5,
+  "baseline_weeks": 4,
+  "weights": {
+    "NFL|Passing yards": 0.04,
+    "NFL|Passing TD": 4,
+    "NFL|Interception thrown": -2,
+    "NFL|Rushing yards": 0.1,
+    "NFL|Rushing TD": 6,
+    "NFL|Receiving yards": 0.1,
+    "NFL|Receptions (half-PPR)": 0.5,
+    "NFL|Receiving TD": 6,
+    "NFL|Fumble lost": -2,
+    "NFL|2-point conversion": 2,
+    "NBA|Points": 1,
+    "NBA|Rebounds": 1.2,
+    "NBA|Assists": 1.5,
+    "NBA|Steals": 2.5,
+    "NBA|Blocks": 2.5,
+    "NBA|Turnovers": -1,
+    "MLB hitter|Singles": 1,
+    "MLB hitter|Doubles": 2,
+    "MLB hitter|Triples": 3,
+    "MLB hitter|Home runs": 4,
+    "MLB hitter|Runs": 1,
+    "MLB hitter|RBI": 1,
+    "MLB hitter|Walks": 1,
+    "MLB hitter|Stolen bases": 2,
+    "MLB hitter|Strikeouts": -0.5,
+    "MLB pitcher|Innings pitched": 3,
+    "MLB pitcher|Strikeouts": 1,
+    "MLB pitcher|Earned runs": -2,
+    "MLB pitcher|Hits allowed": -1,
+    "MLB pitcher|Walks allowed": -1,
+    "MLB pitcher|Win": 5,
+    "MLB pitcher|Save": 5,
+    "NHL skater|Goals": 3,
+    "NHL skater|Assists": 2,
+    "NHL skater|Plus/minus": 0.5,
+    "NHL skater|Shots on goal": 0.4,
+    "NHL skater|Blocked shots": 0.4,
+    "NHL goalie|Wins": 4,
+    "NHL goalie|Saves": 0.2,
+    "NHL goalie|Goals against": -1,
+    "NHL goalie|Shutouts": 3,
+    "MLS|Goals": 6,
+    "MLS|Assists": 3,
+    "MLS|Shots on target": 1,
+    "MLS|Key passes": 1,
+    "MLS|Tackles won": 0.5,
+    "MLS|Appearances (60+ minutes)": 1,
+    "MLS|Clean sheet (GK/DEF)": 4,
+    "MLS|Saves (GK)": 0.5,
+    "MLS|Goals conceded (GK/DEF)": -1,
+    "MLS|Yellow cards": -1,
+    "MLS|Red cards": -3,
+    "F1|Positions gained": 1,
+    "F1|Fastest lap": 3,
+    "F1|Did not finish": -5
+  },
+  "baselines_fallback": {
+    "NFL|QB": [
+      17,
+      6.5
+    ],
+    "NFL|RB": [
+      11,
+      6
+    ],
+    "NFL|WR": [
+      12,
+      5.5
+    ],
+    "NFL|TE": [
+      7,
+      4
+    ],
+    "NBA|Guard": [
+      130,
+      45
+    ],
+    "NBA|Wing": [
+      125,
+      42
+    ],
+    "NBA|Big": [
+      135,
+      48
+    ],
+    "MLB|SP": [
+      12,
+      8
+    ],
+    "MLB|RP": [
+      5,
+      4
+    ],
+    "MLB|Hitter": [
+      16,
+      8
+    ],
+    "NHL|Skater": [
+      10,
+      5
+    ],
+    "NHL|Goalie": [
+      10,
+      6
+    ],
+    "MLS|Forward": [
+      6,
+      4.5
+    ],
+    "MLS|Midfielder": [
+      5,
+      4
+    ],
+    "MLS|Defender": [
+      4,
+      3
+    ],
+    "MLS|Goalkeeper": [
+      5,
+      3
+    ],
+    "F1|Driver": [
+      12,
+      11
+    ]
+  },
+  "min_games": {
+    "NFL|QB": 1,
+    "NFL|RB": 1,
+    "NFL|WR": 1,
+    "NFL|TE": 1,
+    "NBA|Guard": 2,
+    "NBA|Wing": 2,
+    "NBA|Big": 2,
+    "MLB|SP": 1,
+    "MLB|RP": 1,
+    "MLB|Hitter": 3,
+    "NHL|Skater": 2,
+    "NHL|Goalie": 1,
+    "MLS|Forward": 1,
+    "MLS|Midfielder": 1,
+    "MLS|Defender": 1,
+    "MLS|Goalkeeper": 1,
+    "F1|Driver": 1
+  },
+  "f1": {
+    "race_points": {
+      "1": 40,
+      "2": 32,
+      "3": 26,
+      "4": 22,
+      "5": 18,
+      "6": 15,
+      "7": 12,
+      "8": 10,
+      "9": 8,
+      "10": 6,
+      "11": 3,
+      "12": 3,
+      "13": 3,
+      "14": 3,
+      "15": 3,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0
+    },
+    "pole_bonus": 5,
+    "p2_p3_bonus": 3,
+    "sprint_points": [
+      8,
+      7,
+      6,
+      5,
+      4,
+      3,
+      2,
+      1
+    ]
+  },
+  "bonus_bands": [
+    [
+      1,
+      30
+    ],
+    [
+      2,
+      24
+    ],
+    [
+      3,
+      20
+    ],
+    [
+      4,
+      16
+    ],
+    [
+      6,
+      10
+    ],
+    [
+      11,
+      5
+    ],
+    [
+      21,
+      2
+    ]
+  ],
+  "bonus_statuses_scoring_zero": [
+    "Missed cut",
+    "Withdrew",
+    "Did not start",
+    "Not classified"
+  ]
+}

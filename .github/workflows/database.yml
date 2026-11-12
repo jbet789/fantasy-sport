@@ -1,0 +1,19 @@
+name: Update database
+# Run by hand (Actions tab > Update database > Run workflow). Applies any new migration files once, in order, then refreshes the scoring seed.
+on:
+  workflow_dispatch: {}
+concurrency:
+  group: database
+  cancel-in-progress: false
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply migrations
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then echo "SUPABASE_DB_URL secret is not set"; exit 1; fi
+          python3 tools/apply_migrations.py
